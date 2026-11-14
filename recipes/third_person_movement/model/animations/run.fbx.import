@@ -3,13 +3,13 @@
 importer="animation_library"
 importer_version=1
 type="AnimationLibrary"
-uid="uid://cfhsc7pjfvjcn"
-path="res://.godot/imported/walk.fbx-3e4a595666ab59b975eec9b52600318d.res"
+uid="uid://chjj4ceyrebnc"
+path="res://.godot/imported/run.fbx-cf0c69ee387e1c352b8c2120d15e2b7d.res"
 
 [deps]
 
-source_file="res://recipes/third_person_controller/model/animations/walk.fbx"
-dest_files=["res://.godot/imported/walk.fbx-3e4a595666ab59b975eec9b52600318d.res"]
+source_file="res://recipes/third_person_movement/model/animations/run.fbx"
+dest_files=["res://.godot/imported/run.fbx-cf0c69ee387e1c352b8c2120d15e2b7d.res"]
 
 [params]
 
@@ -41,7 +41,7 @@ materials/extract_format=0
 materials/extract_path=""
 _subresources={
 "animations": {
-"Root|Walk": {
+"Root|Run": {
 "save_to_file/enabled": false,
 "save_to_file/fallback_path": "",
 "save_to_file/keep_custom_tracks": "",

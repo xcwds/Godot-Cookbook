@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://w67t7f05a8w5"
-path="res://.godot/imported/skin_cyborg.png-e549d05206151cefad913d97e3085b39.ctex"
+path="res://.godot/imported/skin_cyborg.png-1496d7ccf4e0c286a2c2ee874e54351a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://recipes/third_person_controller/model/skin_cyborg.png"
-dest_files=["res://.godot/imported/skin_cyborg.png-e549d05206151cefad913d97e3085b39.ctex"]
+source_file="res://recipes/third_person_movement/model/skin_cyborg.png"
+dest_files=["res://.godot/imported/skin_cyborg.png-1496d7ccf4e0c286a2c2ee874e54351a.ctex"]
 
 [params]
 

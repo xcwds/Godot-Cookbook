@@ -4,12 +4,12 @@ importer="animation_library"
 importer_version=1
 type="AnimationLibrary"
 uid="uid://dty01pm04xb4w"
-path="res://.godot/imported/jump.fbx-8d3853a991eda5bef587d1a68b6a2d90.res"
+path="res://.godot/imported/jump.fbx-b1b93362d083bd37d8a23befb6fa3440.res"
 
 [deps]
 
-source_file="res://recipes/third_person_controller/model/animations/jump.fbx"
-dest_files=["res://.godot/imported/jump.fbx-8d3853a991eda5bef587d1a68b6a2d90.res"]
+source_file="res://recipes/third_person_movement/model/animations/jump.fbx"
+dest_files=["res://.godot/imported/jump.fbx-b1b93362d083bd37d8a23befb6fa3440.res"]
 
 [params]
 

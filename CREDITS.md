@@ -4,6 +4,6 @@ Only CC0 (public domain) third-party assets are checked in. Every third-party fi
 
 | Files | Source | Author | Licence |
 |---|---|---|---|
-| `recipes/third_person_controller/model/character_medium.fbx`, `skin_cyborg.png`, `animations/*.fbx` | [Animated Characters Bundle 4.0](https://kenney.nl/assets) | [Kenney](https://kenney.nl) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (copy in `model/LICENSE_kenney.txt`) |
+| `recipes/third_person_movement/model/character_medium.fbx`, `skin_cyborg.png`, `animations/*.fbx` | [Animated Characters Bundle 4.0](https://kenney.nl/assets) | [Kenney](https://kenney.nl) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (copy in `model/LICENSE_kenney.txt`) |
 
 `icon.svg` is original to this repository and covered by its licence.

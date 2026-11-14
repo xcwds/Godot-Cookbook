@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://lwlwbk41g2mp"
-path="res://.godot/imported/character_medium.fbx-952d2a97e42d4e06588658361abfe8f7.scn"
+path="res://.godot/imported/character_medium.fbx-ec7d4acbc9d4bd7f6daedbc939a32fb9.scn"
 
 [deps]
 
-source_file="res://recipes/third_person_controller/model/character_medium.fbx"
-dest_files=["res://.godot/imported/character_medium.fbx-952d2a97e42d4e06588658361abfe8f7.scn"]
+source_file="res://recipes/third_person_movement/model/character_medium.fbx"
+dest_files=["res://.godot/imported/character_medium.fbx-ec7d4acbc9d4bd7f6daedbc939a32fb9.scn"]
 
 [params]
 

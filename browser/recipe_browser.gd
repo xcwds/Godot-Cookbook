@@ -15,10 +15,13 @@ func _ready() -> void:
 		var config := ConfigFile.new()
 		config.load("%s/%s/recipe.cfg" % [RECIPES_DIR, recipe])
 		var button := Button.new()
-		button.text = "%s\n%s" % [
-			config.get_value("recipe", "name", recipe),
-			config.get_value("recipe", "description", ""),
-		]
+		button.text = (
+			"%s\n%s"
+			% [
+				config.get_value("recipe", "name", recipe),
+				config.get_value("recipe", "description", ""),
+			]
+		)
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.pressed.connect(get_tree().change_scene_to_file.bind(demo_path))
 		_list.add_child(button)

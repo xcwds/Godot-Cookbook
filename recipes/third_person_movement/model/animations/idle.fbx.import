@@ -4,12 +4,12 @@ importer="animation_library"
 importer_version=1
 type="AnimationLibrary"
 uid="uid://3lgou3psli6w"
-path="res://.godot/imported/idle.fbx-276bb9fc6ade4c2ddd0c3ed553f6f85a.res"
+path="res://.godot/imported/idle.fbx-72bff0145d112dc60da1fc78aedf87fc.res"
 
 [deps]
 
-source_file="res://recipes/third_person_controller/model/animations/idle.fbx"
-dest_files=["res://.godot/imported/idle.fbx-276bb9fc6ade4c2ddd0c3ed553f6f85a.res"]
+source_file="res://recipes/third_person_movement/model/animations/idle.fbx"
+dest_files=["res://.godot/imported/idle.fbx-72bff0145d112dc60da1fc78aedf87fc.res"]
 
 [params]
 

@@ -7,7 +7,7 @@ Starter recipes for 3D game development in Godot 4. Each recipe is a small folde
 | Recipe | What it is |
 |---|---|
 | [state_machine](recipes/state_machine/) | Node-based finite state machine. |
-| [third_person_controller](recipes/third_person_controller/) | Character movement with dash and wall jump, wired to the cameras and health. |
+| [third_person_movement](recipes/third_person_movement/) | Character that runs, jumps, dashes, wall slides and wall jumps. |
 | [orbit_camera](recipes/orbit_camera/) | Third-person camera that follows, orbits, zooms and avoids walls. |
 | [aim_camera](recipes/aim_camera/) | Over-the-shoulder camera that takes over while aiming. |
 | [health](recipes/health/) | Hit points as a node, with damage, heal and signals. |
@@ -38,8 +38,8 @@ Copy the recipe's folder into your project, along with the recipes it depends on
 Open the repository in the dev container (`.devcontainer/`) to get Godot 4.7.2 (headless), `gdlint` and `gdformat`.
 
 ```bash
-tools/check.sh        # import the project, run the browser and every demo headless, run tests/
-tools/check.sh lint   # gdlint + gdformat --check
+tools/check.sh        # import, run the browser and every demo headless, run tests/, lint
+tools/check.sh test   # only the tests; also: import, smoke, lint
 ```
 
 The container is headless: use it to import, lint and smoke-test. To play the demos, open the project in the Godot editor on your machine. `docs/vscode_sample_settings.json` has editor settings for working outside the container.

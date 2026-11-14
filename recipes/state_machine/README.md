@@ -55,7 +55,7 @@ None. See `recipe.cfg`.
 
 ## Where to take it next
 
-- Transitions are by node name, so a typo is only reported at runtime (`no state named ...`). Constants for the names, as `third_person_controller` uses, are the cheap fix.
+- Transitions are by node name, so a typo is only reported at runtime (`no state named ...`). Constants for the names, as `third_person_movement` uses, are the cheap fix.
 - No history: `_enter` receives the previous state's name, but there is no stack to pop back to.
 - No nested or parallel machines. You can put a second `StateMachine` inside a state, but nothing forwards callbacks to it for you.
 - Hand-offs are capped at 8 per callback to catch two states that keep handing off to each other.

@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 # Checks the cookbook project.
 #
-#   tools/check.sh            import + smoke + test (the default)
+#   tools/check.sh            import + smoke + test + lint (the default)
 #   tools/check.sh import     import assets and parse all scripts
 #   tools/check.sh smoke      run the main scene and every recipes/*/demo.tscn headless for a few frames
 #   tools/check.sh test       run tests/test_*.gd headless
 #   tools/check.sh lint       gdlint + gdformat --check
-#   tools/check.sh all        import + smoke + test + lint
 #
 # GODOT overrides the Godot binary (default: godot).
 set -euo pipefail
@@ -71,8 +70,7 @@ case "${1:-default}" in
 	smoke) do_smoke ;;
 	lint) do_lint ;;
 	test) do_test ;;
-	default) do_import; do_smoke; do_test ;;
-	all) do_import; do_smoke; do_test; do_lint ;;
-	*) sed -n '2,11p' "$0" >&2; exit 2 ;;
+	default) do_import; do_smoke; do_test; do_lint ;;
+	*) sed -n '2,10p' "$0" >&2; exit 2 ;;
 esac
 echo "OK"

@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://dnajd06eujhut"]
+
+[ext_resource type="Script" path="res://recipes/third_person_movement/demo.gd" id="script"]
+[ext_resource type="PackedScene" path="res://shared/demo_level.tscn" id="level"]
+[ext_resource type="PackedScene" uid="uid://oxyumaw1iadk" path="res://recipes/third_person_movement/third_person_character.tscn" id="player"]
+[ext_resource type="PackedScene" path="res://recipes/orbit_camera/orbit_camera.tscn" id="orbit_camera"]
+[ext_resource type="PackedScene" path="res://recipes/aim_camera/aim_camera.tscn" id="aim_camera"]
+[ext_resource type="Script" path="res://recipes/health/health.gd" id="health"]
+[ext_resource type="PackedScene" uid="uid://cq0bb4yx3m4ay" path="res://recipes/health_bar/health_bar_3d.tscn" id="health_bar"]
+[ext_resource type="PackedScene" uid="uid://cq1is8bcp5mri" path="res://recipes/pause_menu/pause_menu.tscn" id="pause_menu"]
+
+[node name="Demo" type="Node3D"]
+script = ExtResource("script")
+
+[node name="DemoLevel" parent="." instance=ExtResource("level")]
+
+[node name="Player" parent="." instance=ExtResource("player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="Health" type="Node" parent="Player"]
+script = ExtResource("health")
+
+[node name="HealthBar3d" parent="Player" node_paths=PackedStringArray("health") instance=ExtResource("health_bar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+health = NodePath("../Health")
+
+[node name="OrbitCamera" parent="." node_paths=PackedStringArray("target") instance=ExtResource("orbit_camera")]
+target = NodePath("../Player")
+target_offset = Vector3(0, 1.2, 0)
+shoulder_offset = Vector3(1, 0, 0)
+
+[node name="AimCamera" parent="." node_paths=PackedStringArray("target", "orbit_camera") instance=ExtResource("aim_camera")]
+target = NodePath("../Player")
+target_offset = Vector3(0, 0.45, 0)
+orbit_camera = NodePath("../OrbitCamera")
+
+[node name="PauseMenu" parent="." instance=ExtResource("pause_menu")]

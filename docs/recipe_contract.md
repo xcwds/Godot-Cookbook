@@ -4,7 +4,7 @@ A recipe is a folder under `recipes/` that someone can copy into their own proje
 
 ## Rules
 
-1. **Copyable on its own.** A recipe depends only on Godot and on other recipes named in its `recipe.cfg`. Only `demo.tscn` and files named `demo*` may use anything from `shared/` or `browser/`.
+1. **Copyable on its own.** A recipe depends only on Godot and on other recipes named in its `recipe.cfg`. Only `demo.tscn` and files named `demo*` may use anything from `shared/`, or from recipes that are not in `depends`.
 2. **Relocatable.** Scenes reference their own files by `uid://`; scripts do not hard-code `res://recipes/...` paths. Keep the `.uid` and `.import` files next to their sources so UIDs survive a copy.
 3. **Exports and signals over paths.** Configuration is exported properties; communication with other recipes is signals or exported node references, not `$Hard/Coded/Paths` into another recipe.
 4. **A `demo.tscn`** that runs by itself and shows the recipe working. The recipe browser lists every recipe that has one.
@@ -12,8 +12,6 @@ A recipe is a folder under `recipes/` that someone can copy into their own proje
 6. **A `README.md`** following [recipe_template.md](recipe_template.md).
 7. **Naming and style.** `snake_case` folders, scenes and scripts; code follows the [style guide](style_guide.md).
 8. **CC0 assets only**, each listed in `CREDITS.md`.
-
-Recipes moved from the original project do not meet rule 3 yet; their READMEs say where.
 
 ## recipe.cfg
 
@@ -38,4 +36,4 @@ physics_layers_3d={"player": 2}
 1. Create `recipes/<name>/` with the scripts and scenes, `recipe.cfg`, `README.md` and `demo.tscn`.
 2. Add any new input actions to `project.godot` and list them in `recipe.cfg`.
 3. If the recipe has logic worth pinning down, add a `tests/test_<name>.gd` (see `tests/test_state_machine.gd`).
-4. Run `tools/check.sh`. It imports the project, runs the browser and every demo headless, and runs the tests.
+4. Run `tools/check.sh`. It imports the project, runs the browser and every demo headless, runs the tests, and lints.
