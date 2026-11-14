@@ -3,7 +3,7 @@ Starter recipes for 3D game development in Godot.
 
 ## Development
 
-Open the repository in the dev container (`.devcontainer/`) to get Godot 4.4.1 (headless), `gdlint` and `gdformat`.
+Open the repository in the dev container (`.devcontainer/`) to get Godot 4.7.2 (headless), `gdlint` and `gdformat`.
 
 ```bash
 tools/check.sh        # import every project and smoke-run its demo scene

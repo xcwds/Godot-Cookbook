@@ -3,7 +3,7 @@
 	"build": {
 		"dockerfile": "Dockerfile",
 		"args": {
-			"GODOT_VERSION": "4.4.1-stable"
+			"GODOT_VERSION": "4.7.2-stable"
 		}
 	},
 	// Imports every project once so the language server and smoke runs work straight away.

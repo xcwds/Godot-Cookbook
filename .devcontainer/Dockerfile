@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
 # Keep in sync with config/features in each project.godot.
-ARG GODOT_VERSION=4.4.1-stable
+ARG GODOT_VERSION=4.7.2-stable
 ARG GDTOOLKIT_VERSION=4.*
 # Set automatically by BuildKit (amd64 / arm64).
 ARG TARGETARCH
