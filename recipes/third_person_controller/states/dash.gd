@@ -3,25 +3,21 @@ extends ThirdPersonControllerState
 @onready var duration: Timer = $Duration
 @onready var cooldown: Timer = $Cooldown
 
-func _enter(_p, _d = {}) -> void:
-	# print("Dash _enter")
+func _enter(_previous_state: StringName, _data: Dictionary) -> void:
 	tpc._do_dash()
 	duration.start(tpc.dash_length / tpc.dash_speed)
 	tpc.is_dash_ready = false
 	tpc.look_forward(1.0)
-	super (_p, _d)
 
 func _exit() -> void:
-	# print("Dash _exit")
 	cooldown.start(tpc.dash_cooldown)
 	tpc._end_dash()
 
-func _do_physics_process(_d) -> void:
-	# print("Dash _do_physics_process")
+func _physics_update(_delta: float) -> void:
 	tpc.move_and_slide()
 
 func _on_duration_timeout() -> void:
-	finished.emit(IWR)
+	transition_to(IWR)
 
 func _on_cooldown_timeout() -> void:
 	tpc.is_dash_ready = true

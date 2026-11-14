@@ -27,6 +27,7 @@ Copy the recipe's folder into your project, along with the recipes it depends on
 | `shared/` | Demo-only scenes and assets. Recipes do not depend on it. |
 | `browser/` | The recipe browser shown when the project runs. |
 | `docs/` | [Recipe contract](docs/recipe_contract.md), [README template](docs/recipe_template.md), [style guide](docs/style_guide.md). |
+| `tests/` | Headless test scripts (`tests/test_*.gd`). |
 | `tools/` | Checks used locally and in the dev container. |
 
 ## Development
@@ -34,7 +35,7 @@ Copy the recipe's folder into your project, along with the recipes it depends on
 Open the repository in the dev container (`.devcontainer/`) to get Godot 4.7.2 (headless), `gdlint` and `gdformat`.
 
 ```bash
-tools/check.sh        # import the project, then run the browser and every demo headless
+tools/check.sh        # import the project, run the browser and every demo headless, run tests/
 tools/check.sh lint   # gdlint + gdformat --check
 ```
 

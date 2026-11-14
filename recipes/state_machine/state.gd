@@ -1,36 +1,48 @@
-class_name State extends Node
+class_name State
+extends Node
+## One state of a [StateMachine]. Add it as a child of the machine and override
+## the virtual methods you need. Only the current state receives callbacks.
 
-@warning_ignore_start("unused_parameter", "unused_signal")
-signal finished(next_state_path: String, data: Dictionary)
+## Emitted by [method transition_to] and [method hand_off_to]. The machine
+## listens to this; states should call those methods rather than emit it.
+signal transition_requested(next_state: StringName, data: Dictionary, continue_tick: bool)
 
-func _do_unhandled_input(event: InputEvent) -> void:
+
+## Called when the machine switches to this state. [param previous_state] is
+## the name of the state being left, or empty for the initial state.
+## [param data] is whatever the previous state passed along.
+func _enter(_previous_state: StringName, _data: Dictionary) -> void:
 	pass
 
-func _do_process(delta: float) -> void:
-	pass
 
-func _do_physics_process(delta: float) -> void:
-	pass
-
-func _enter(previous_state_path: String, data := {}) -> void:
-	var delta = data.get("delta")
-	var event = data.get("event")
-	var func_name = data.get("func")
-	# print("Base _enter: delta=%s event=%s, func_name=%s" % [delta, event, func_name])
-	match func_name:
-		"_do_unhandled_input" when event: _do_unhandled_input(event)
-		"_do_process" when delta: _do_process(delta)
-		"_do_physics_process" when delta: _do_physics_process(delta)
-
+## Called when the machine switches away from this state.
 func _exit() -> void:
 	pass
 
-func generate_delta_dictionary(delta: float, func_name: String) -> Dictionary: return {
-	"delta": delta,
-	"func": func_name
-}
 
-func generate_input_dictionary(event: InputEvent, func_name: String) -> Dictionary: return {
-	"event": event,
-	"func": func_name
-}
+## Called every frame while this state is current.
+func _update(_delta: float) -> void:
+	pass
+
+
+## Called every physics tick while this state is current.
+func _physics_update(_delta: float) -> void:
+	pass
+
+
+## Called for unhandled input while this state is current.
+func _handle_input(_event: InputEvent) -> void:
+	pass
+
+
+## Switch to the sibling state named [param next_state]. The new state gets
+## its first callback on the next frame or tick.
+func transition_to(next_state: StringName, data: Dictionary = {}) -> void:
+	transition_requested.emit(next_state, data, false)
+
+
+## Switch to [param next_state] and let it run the callback that is executing
+## right now, so no frame is lost. Use it when this state has decided it
+## should not handle the current frame, and return straight after calling it.
+func hand_off_to(next_state: StringName, data: Dictionary = {}) -> void:
+	transition_requested.emit(next_state, data, true)

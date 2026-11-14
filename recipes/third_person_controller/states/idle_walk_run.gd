@@ -2,19 +2,18 @@ extends ThirdPersonControllerState
 
 var last_input_direction := Vector2.ZERO
 
-func _enter(_p, _d = {}) -> void:
+func _enter(_previous_state: StringName, _data: Dictionary) -> void:
 	tpc.animation_state.travel("IWR_Strafe" if tpc.is_aiming() else "IWR")
 
-func _do_physics_process(delta: float) -> void:
-	# print("IWR _do_physics_process")
+func _physics_update(delta: float) -> void:
 	if tpc.is_start_dash():
-		finished.emit(DASH, generate_delta_dictionary(delta, "_do_physics_process"))
+		hand_off_to(DASH)
 		return
 	elif not tpc.is_on_floor():
-		finished.emit(FALL, generate_delta_dictionary(delta, "_do_physics_process"))
+		hand_off_to(FALL)
 		return
 	elif Input.is_action_pressed("jump"):
-		finished.emit(JUMP, generate_delta_dictionary(delta, "_do_physics_process"))
+		hand_off_to(JUMP)
 		return
 
 	tpc._do_iwr(delta)

@@ -37,6 +37,7 @@ On `Twist`: mouse sensitivity, pitch limits, axis inversion and locks. On `FreeC
 - The controller script owns movement, aiming, camera switching and health, and the states call back into it. Splitting those apart is the next planned step.
 - Nodes are found by hard-coded path, so renaming nodes in the scene breaks the scripts.
 - Holding jump re-jumps on every landing, and there is no coyote time or jump buffering.
+- Jumping while pressed against a wall drops straight into the wall slide instead of rising.
 - The end of a dash pushes velocity toward +X/+Z regardless of dash direction.
 - The character has only idle, walk, run and jump clips: sideways and backwards movement while aiming slides, and falling, landing and wall sliding all use the jump pose.
 - The aim camera was placed for a different model and sits close to this character's head; aim pitch is not clamped.

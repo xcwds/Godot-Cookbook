@@ -1,18 +1,17 @@
 extends ThirdPersonControllerState
 
-func _enter(_p, _d = {}) -> void:
+func _enter(_previous_state: StringName, _data: Dictionary) -> void:
 	tpc.animation_state.travel("Fall_Idle")
 
-func _do_physics_process(delta: float) -> void:
-	# print("Fall _do_physics_process")
+func _physics_update(delta: float) -> void:
 	if tpc.is_start_dash():
-		finished.emit(DASH, generate_delta_dictionary(delta, "_do_physics_process"))
+		hand_off_to(DASH)
 		return
 	elif tpc.is_on_floor():
-		finished.emit(IWR, generate_delta_dictionary(delta, "_do_physics_process"))
+		hand_off_to(IWR)
 		return
 	elif tpc.is_wall_slide and tpc.is_on_wall():
-		finished.emit(WALL_SLIDE, generate_delta_dictionary(delta, "do_physics_process"))
+		hand_off_to(WALL_SLIDE)
 		return
 	
 	tpc._do_fall(delta)

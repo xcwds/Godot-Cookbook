@@ -37,4 +37,5 @@ physics_layers_3d={"player": 2}
 
 1. Create `recipes/<name>/` with the scripts and scenes, `recipe.cfg`, `README.md` and `demo.tscn`.
 2. Add any new input actions to `project.godot` and list them in `recipe.cfg`.
-3. Run `tools/check.sh`. It imports the project and runs the browser and every demo headless.
+3. If the recipe has logic worth pinning down, add a `tests/test_<name>.gd` (see `tests/test_state_machine.gd`).
+4. Run `tools/check.sh`. It imports the project, runs the browser and every demo headless, and runs the tests.
