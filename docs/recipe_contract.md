@@ -11,7 +11,7 @@ A recipe is a folder under `recipes/` that someone can copy into their own proje
 5. **A `recipe.cfg`** manifest (see below).
 6. **A `README.md`** following [recipe_template.md](recipe_template.md).
 7. **Naming and style.** `snake_case` folders, scenes and scripts; code follows the [style guide](style_guide.md).
-8. **CC0 assets only**, each listed in `CREDITS.md`.
+8. **CC0 assets only**, each listed in `CREDITS.md`. The check fails for an asset file that is not.
 
 ## recipe.cfg
 

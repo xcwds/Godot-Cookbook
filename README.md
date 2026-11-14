@@ -16,7 +16,7 @@ Starter recipes for 3D game development in Godot 4. Each recipe is a small folde
 
 ## Try them
 
-Open the repository folder in Godot 4.7 and run the project. The recipe browser lists every demo; press F1 inside a demo to return to it.
+Open the repository folder in Godot 4.7 (the exact version is in `.godot-version`) and run the project. The recipe browser lists every demo; press F1 inside a demo to return to it.
 
 ## Use a recipe
 
@@ -29,20 +29,20 @@ Copy the recipe's folder into your project, along with the recipes it depends on
 | `recipes/` | One folder per recipe. |
 | `shared/` | Demo-only scenes and assets. Recipes do not depend on it. |
 | `browser/` | The recipe browser shown when the project runs. |
-| `docs/` | [Recipe contract](docs/recipe_contract.md), [README template](docs/recipe_template.md), [style guide](docs/style_guide.md). |
+| `docs/` | [Recipe contract](docs/recipe_contract.md), [README template](docs/recipe_template.md), [style guide](docs/style_guide.md), [upgrading Godot](docs/upgrading.md). |
 | `tests/` | Headless test scripts (`tests/test_*.gd`). |
 | `tools/` | Checks used locally and in the dev container. |
 
 ## Development
 
-Open the repository in the dev container (`.devcontainer/`) to get Godot 4.7.2 (headless), `gdlint` and `gdformat`.
+Open the repository in the dev container (`.devcontainer/`) to get the pinned Godot version (headless), `gdlint` and `gdformat`. Outside a container, `tools/install_godot.sh` installs the same Godot binary on Linux.
 
 ```bash
-tools/check.sh        # import, run the browser and every demo headless, run tests/, lint
-tools/check.sh test   # only the tests; also: import, smoke, lint
+tools/check.sh        # repo checks, import, run the browser and every demo headless, run tests/, lint
+tools/check.sh test   # only the tests; also: repo, import, smoke, lint
 ```
 
-The container is headless: use it to import, lint and smoke-test. To play the demos, open the project in the Godot editor on your machine. `docs/vscode_sample_settings.json` has editor settings for working outside the container.
+The same checks run on every pull request. The container is headless: use it to import, lint and test. To play the demos, open the project in the Godot editor on your machine. `docs/vscode_sample_settings.json` has editor settings for working outside the container.
 
 ## Assets
 

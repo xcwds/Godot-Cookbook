@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Checks the cookbook project.
 #
-#   tools/check.sh            import + smoke + test + lint (the default)
+#   tools/check.sh            repo + import + smoke + test + lint (the default)
+#   tools/check.sh repo       Godot version is consistent, every asset is in CREDITS.md
 #   tools/check.sh import     import assets and parse all scripts
 #   tools/check.sh smoke      run the main scene and every recipes/*/demo.tscn headless for a few frames
 #   tools/check.sh test       run tests/test_*.gd headless
@@ -14,6 +15,7 @@ cd "$(dirname "$0")/.."
 GODOT="${GODOT:-godot}"
 SMOKE_FRAMES=120
 SCRIPT_DIRS=(recipes browser shared tests)
+ASSET_EXTENSIONS="fbx|glb|gltf|obj|blend|dae|png|jpg|jpeg|webp|svg|exr|hdr|ogg|wav|mp3|ttf|otf|woff2"
 
 # Godot often exits 0 despite script or resource errors, so the log is checked as well.
 run_godot() {
@@ -26,6 +28,37 @@ run_godot() {
 		return 1
 	fi
 	rm -f "$log"
+}
+
+# Checks that need no Godot binary.
+do_repo() {
+	echo "== repo"
+	local version minor failed=0 asset
+	version="$(tr -d '[:space:]' <.godot-version)"
+	minor="$(echo "$version" | cut -d. -f1,2)"
+	if ! grep -q "^config/features=.*\"$minor\"" project.godot; then
+		echo "project.godot config/features does not name Godot $minor (.godot-version is $version)" >&2
+		failed=1
+	fi
+
+	# Every asset must match a backticked path in a CREDITS.md table ("*" is a wildcard).
+	local -a credited
+	mapfile -t credited < <(grep '^|' CREDITS.md | grep -o '`[^`]*`' | tr -d '`')
+	while IFS= read -r asset; do
+		local found=0 pattern
+		for pattern in "${credited[@]}"; do
+			# shellcheck disable=SC2053
+			if [[ "$asset" == $pattern ]]; then
+				found=1
+				break
+			fi
+		done
+		if [ "$found" -eq 0 ]; then
+			echo "asset not listed in CREDITS.md: $asset" >&2
+			failed=1
+		fi
+	done < <(git ls-files | grep -iE "\.($ASSET_EXTENSIONS)$")
+	return "$failed"
 }
 
 do_import() {
@@ -66,11 +99,12 @@ do_lint() {
 }
 
 case "${1:-default}" in
+	repo) do_repo ;;
 	import) do_import ;;
 	smoke) do_smoke ;;
 	lint) do_lint ;;
 	test) do_test ;;
-	default) do_import; do_smoke; do_test; do_lint ;;
-	*) sed -n '2,10p' "$0" >&2; exit 2 ;;
+	default) do_repo; do_import; do_smoke; do_test; do_lint ;;
+	*) sed -n '2,11p' "$0" >&2; exit 2 ;;
 esac
 echo "OK"
