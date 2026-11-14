@@ -1,0 +1,42 @@
+[gd_scene format=3]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_material"]
+sky_top_color = Color(0.741721, 0.0816152, 0.656019, 1)
+sky_horizon_color = Color(0.591213, 0.500962, 0.603185, 1)
+ground_bottom_color = Color(0, 0.299102, 0.13359, 1)
+ground_horizon_color = Color(0.591213, 0.500962, 0.603185, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_material")
+
+[sub_resource type="Environment" id="environment"]
+background_mode = 2
+sky = SubResource("sky")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="room_material"]
+albedo_color = Color(0, 0.406329, 0.679828, 1)
+roughness = 0.0
+
+[sub_resource type="SphereMesh" id="marker_mesh"]
+
+[node name="DemoLevel" type="Node3D"]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75, -0.433013, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("environment")
+
+[node name="Room" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 25, 0)
+material_override = SubResource("room_material")
+use_collision = true
+flip_faces = true
+size = Vector3(50, 50, 50)
+
+[node name="ForwardMarker" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -24)
+mesh = SubResource("marker_mesh")
