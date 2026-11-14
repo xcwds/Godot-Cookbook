@@ -1,21 +1,32 @@
 # Pause menu
 
-A full-screen `Control` that toggles `get_tree().paused` on the `pause` action and shows Resume, Restart and Quit. It also captures the mouse while playing and releases it while paused.
+A `CanvasLayer` that pauses the scene tree on the `pause` action and shows Resume, Restart and Quit over a dimmed screen. It is also the one place that changes the mouse mode around pausing, so mouse-look games do not need to handle that elsewhere.
 
 ## Add it to your project
 
 1. Copy this folder (without `demo.tscn`) into your project.
-2. Add the `pause` input action (Esc and gamepad Start in the cookbook project).
+2. Add a `pause` input action (Esc and gamepad Start in the cookbook project).
 3. Instance `pause_menu.tscn` anywhere in your gameplay scene.
 
-Nodes that should keep running while paused need their own `process_mode`.
+While paused, only nodes whose `process_mode` allows it keep running. The menu sets its own.
 
 ## Requirements
 
-Input action: `pause`. See `recipe.cfg`.
+Input action: `pause` (or whatever you set `pause_action` to). See `recipe.cfg`.
+
+## Settings
+
+| Member | Purpose |
+|---|---|
+| `pause_action` | Input action that opens and closes the menu. |
+| `capture_mouse` | Capture the mouse while playing. On pause the mouse is released, and on resume the previous mouse mode is restored either way. Turn it off for games that use a visible cursor. |
+| `pause()`, `resume()`, `toggle()`, `is_open()` | Control it from code. |
+| `restart()`, `quit()` | What the buttons call. |
+| `paused`, `resumed` | Signals, for muting audio or showing a HUD hint. |
 
 ## Where to take it next
 
-- It captures the mouse on `_ready`, which suits a mouse-look game and nothing else. Make that an exported option.
-- Restart reloads the current scene; Quit closes the game. Most games want "back to main menu" and a confirmation.
-- The buttons are positioned with fixed offsets and are not focused when the menu opens, so gamepad navigation needs a `grab_focus()`.
+- Restart reloads the current scene and Quit closes the game with no confirmation. Most games want "back to main menu" and an "are you sure?".
+- No settings screen. A settings recipe is on the roadmap; a button here would open it.
+- The menu uses the default theme. Give `Panel` a theme, or replace the layout under `Center`.
+- Anything else that opens over the game (inventory, dialogue) will fight over pause and mouse mode. At that point move both into one small manager.
