@@ -1,0 +1,26 @@
+{
+	"name": "Godot Cookbook",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"args": {
+			"GODOT_VERSION": "4.4.1-stable"
+		}
+	},
+	// Imports every project once so the language server and smoke runs work straight away.
+	"postCreateCommand": "tools/check.sh import",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"geequlim.godot-tools",
+				"EditorConfig.EditorConfig"
+			],
+			"settings": {
+				"godotTools.editorPath.godot4": "/usr/local/bin/godot",
+				"godotTools.lsp.headless": true,
+				"godotTools.inlayHints.gdscript": true,
+				"editor.insertSpaces": false,
+				"editor.detectIndentation": false
+			}
+		}
+	}
+}
