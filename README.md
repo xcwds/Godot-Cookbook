@@ -20,7 +20,23 @@ Open the repository folder in Godot 4.7 (the exact version is in `.godot-version
 
 ## Use a recipe
 
-Copy the recipe's folder into your project, along with the recipes it depends on, then follow its README for input actions and scene setup. Leave out `demo*` files.
+From a clone of this repository:
+
+```bash
+tools/cookbook list
+```
+
+```bash
+tools/cookbook info third_person_movement
+```
+
+```bash
+tools/cookbook add third_person_movement --to ~/games/my_game
+```
+
+`add` copies the recipe and the recipes it depends on into `addons/cookbook/` in your project (change with `--dest`), leaves the demos behind, and adds the input actions and physics layer names they need to your `project.godot` without touching ones you already have. It then lists what is left to do by hand; the recipe's README has the scene setup. `--dry-run` shows what would happen. It needs Python 3.
+
+Copying a recipe folder by hand works too: take the recipes it depends on, skip the `demo*` files, and replace `res://recipes/` in the copied scenes with the new location.
 
 ## Layout
 
@@ -31,15 +47,15 @@ Copy the recipe's folder into your project, along with the recipes it depends on
 | `browser/` | The recipe browser shown when the project runs. |
 | `docs/` | [Recipe contract](docs/recipe_contract.md), [README template](docs/recipe_template.md), [style guide](docs/style_guide.md), [upgrading Godot](docs/upgrading.md). |
 | `tests/` | Headless test scripts (`tests/test_*.gd`). |
-| `tools/` | Checks used locally and in the dev container. |
+| `tools/` | `cookbook` (add recipes to a project), `check.sh`, `install_godot.sh`. |
 
 ## Development
 
 Open the repository in the dev container (`.devcontainer/`) to get the pinned Godot version (headless), `gdlint` and `gdformat`. Outside a container, `tools/install_godot.sh` installs the same Godot binary on Linux.
 
 ```bash
-tools/check.sh        # repo checks, import, run the browser and every demo headless, run tests/, lint
-tools/check.sh test   # only the tests; also: repo, import, smoke, lint
+tools/check.sh        # repo checks, import, demos, tests, recipes in an empty project, lint
+tools/check.sh test   # only the tests; also: repo, import, smoke, cli, lint
 ```
 
 The same checks run on every pull request. The container is headless: use it to import, lint and test. To play the demos, open the project in the Godot editor on your machine. `docs/vscode_sample_settings.json` has editor settings for working outside the container.
