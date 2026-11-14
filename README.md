@@ -12,6 +12,7 @@ Starter recipes for 3D game development in Godot 4. Each recipe is a small folde
 | [aim_camera](recipes/aim_camera/) | Over-the-shoulder camera that takes over while aiming. |
 | [interaction](recipes/interaction/) | Walk up to something, see a prompt, press a button. |
 | [health](recipes/health/) | Hit points as a node, with damage, heal and signals. |
+| [hitbox](recipes/hitbox/) | Areas that deal damage and areas that take it. |
 | [health_bar](recipes/health_bar/) | 2D bar that follows a health node, and a billboarded 3D version. |
 | [pause_menu](recipes/pause_menu/) | Pause, resume, restart and quit. |
 

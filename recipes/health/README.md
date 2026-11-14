@@ -38,7 +38,7 @@ None. See `recipe.cfg`.
 
 ## Where to take it next
 
-- Nothing delivers damage yet. A hitbox/hurtbox recipe that calls `damage()` on overlap is the planned companion.
-- No invulnerability window after a hit; set `invulnerable` from a timer on `damaged`.
+- Damage has to be delivered by something. The `hitbox` recipe calls `damage()` when areas overlap.
+- No invulnerability window after a hit here; `Hurtbox` in the `hitbox` recipe has one, or set `invulnerable` from a timer on `damaged`.
 - No damage types, resistances or shields. `damage()` is the one place to add them.
 - Finding the node is by convention (`get_node("Health")`). A group or a typed helper scales better.
