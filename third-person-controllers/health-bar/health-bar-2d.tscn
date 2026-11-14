@@ -1,9 +1,18 @@
-[gd_scene load_steps=3 format=3 uid="uid://dpvorffbiscjj"]
+[gd_scene format=3 uid="uid://dpvorffbiscjj"]
 
-[ext_resource type="Texture2D" uid="uid://de0r6nuew3x7p" path="res://health-bar/barHorizontal_green_mid 200.png" id="1_xve0h"]
 [ext_resource type="Script" uid="uid://tfuly1m8ic8f" path="res://health-bar/health_bar_2d.gd" id="2_7skfm"]
+
+[sub_resource type="Gradient" id="Gradient_fill"]
+offsets = PackedFloat32Array(0)
+colors = PackedColorArray(1, 1, 1, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_fill"]
+gradient = SubResource("Gradient_fill")
+width = 200
+height = 26
 
 [node name="HealthBar2d" type="TextureProgressBar"]
 value = 100.0
-texture_progress = ExtResource("1_xve0h")
+texture_progress = SubResource("GradientTexture2D_fill")
+tint_progress = Color(0.2, 0.8, 0.2, 1)
 script = ExtResource("2_7skfm")
