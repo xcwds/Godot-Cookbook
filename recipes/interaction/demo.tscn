@@ -1,0 +1,99 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://recipes/interaction/demo.gd" id="script"]
+[ext_resource type="PackedScene" path="res://shared/demo_level.tscn" id="level"]
+[ext_resource type="PackedScene" uid="uid://oxyumaw1iadk" path="res://recipes/third_person_movement/third_person_character.tscn" id="player"]
+[ext_resource type="PackedScene" path="res://recipes/orbit_camera/orbit_camera.tscn" id="orbit_camera"]
+[ext_resource type="PackedScene" uid="uid://cq1is8bcp5mri" path="res://recipes/pause_menu/pause_menu.tscn" id="pause_menu"]
+[ext_resource type="PackedScene" path="res://recipes/interaction/interactor.tscn" id="interactor"]
+[ext_resource type="PackedScene" path="res://recipes/interaction/interactable.tscn" id="interactable"]
+[ext_resource type="PackedScene" path="res://recipes/interaction/interaction_prompt.tscn" id="prompt"]
+
+[sub_resource type="BoxMesh" id="switch_mesh"]
+size = Vector3(0.6, 1.2, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="switch_material"]
+albedo_color = Color(0.25, 0.25, 0.3, 1)
+
+[sub_resource type="SphereMesh" id="lamp_mesh"]
+radius = 0.6
+height = 1.2
+
+[sub_resource type="StandardMaterial3D" id="lamp_material"]
+albedo_color = Color(0.5, 0.45, 0.2, 1)
+emission = Color(1, 0.85, 0.3, 1)
+emission_energy_multiplier = 3.0
+
+[sub_resource type="BoxMesh" id="pickup_mesh"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="pickup_material"]
+albedo_color = Color(0.2, 0.8, 0.4, 1)
+
+[node name="Demo" type="Node3D"]
+script = ExtResource("script")
+
+[node name="DemoLevel" parent="." instance=ExtResource("level")]
+
+[node name="Player" parent="." instance=ExtResource("player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="Interactor" parent="Player" node_paths=PackedStringArray("facing") instance=ExtResource("interactor")]
+facing = NodePath("../Model")
+
+[node name="OrbitCamera" parent="." node_paths=PackedStringArray("target") instance=ExtResource("orbit_camera")]
+target = NodePath("../Player")
+target_offset = Vector3(0, 1.2, 0)
+
+[node name="Switch" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -5)
+mesh = SubResource("switch_mesh")
+surface_material_override/0 = SubResource("switch_material")
+
+[node name="Interactable" parent="Switch" instance=ExtResource("interactable")]
+prompt = "Turn on"
+
+[node name="Lamp" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -7)
+mesh = SubResource("lamp_mesh")
+surface_material_override/0 = SubResource("lamp_material")
+
+[node name="Pickups" type="Node3D" parent="."]
+
+[node name="Pickup1" type="MeshInstance3D" parent="Pickups"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.25, -3)
+mesh = SubResource("pickup_mesh")
+surface_material_override/0 = SubResource("pickup_material")
+
+[node name="Interactable" parent="Pickups/Pickup1" instance=ExtResource("interactable")]
+prompt = "Pick up"
+
+[node name="Pickup2" type="MeshInstance3D" parent="Pickups"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9, 0.25, -3)
+mesh = SubResource("pickup_mesh")
+surface_material_override/0 = SubResource("pickup_material")
+
+[node name="Interactable" parent="Pickups/Pickup2" instance=ExtResource("interactable")]
+prompt = "Pick up"
+
+[node name="Pickup3" type="MeshInstance3D" parent="Pickups"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.25, -2)
+mesh = SubResource("pickup_mesh")
+surface_material_override/0 = SubResource("pickup_material")
+
+[node name="Interactable" parent="Pickups/Pickup3" instance=ExtResource("interactable")]
+prompt = "Pick up"
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="InteractionPrompt" parent="UI" node_paths=PackedStringArray("interactor") instance=ExtResource("prompt")]
+interactor = NodePath("../../Player/Interactor")
+
+[node name="Counter" type="Label" parent="UI"]
+unique_name_in_owner = true
+offset_left = 32.0
+offset_top = 32.0
+theme_override_font_sizes/font_size = 20
+text = "Collected: 0"
+
+[node name="PauseMenu" parent="." instance=ExtResource("pause_menu")]
