@@ -2,9 +2,8 @@ extends ThirdPersonControllerState
 
 var last_input_direction := Vector2.ZERO
 
-func _enter(p, _d = {}) -> void:
-	if [FALL, WALL_JUMP].has(p):
-		tpc.animation_state.travel("Fall_Land")
+func _enter(_p, _d = {}) -> void:
+	tpc.animation_state.travel("IWR_Strafe" if tpc.is_aiming() else "IWR")
 
 func _do_physics_process(delta: float) -> void:
 	# print("IWR _do_physics_process")
@@ -21,7 +20,8 @@ func _do_physics_process(delta: float) -> void:
 	tpc._do_iwr(delta)
 	tpc.move_and_slide()
 
-	tpc.animation_tree.set("parameters/IWR/blend_position", tpc.velocity.length())
+	var horizontal_speed := Vector2(tpc.velocity.x, tpc.velocity.z).length()
+	tpc.animation_tree.set("parameters/IWR/blend_position", minf(horizontal_speed / tpc.speed, 1.0))
 
 	var input_direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if input_direction != last_input_direction:

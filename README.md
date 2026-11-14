@@ -11,3 +11,7 @@ tools/check.sh lint   # gdlint + gdformat --check
 ```
 
 The container is headless: use it to import, lint and smoke-test. To play a recipe, open its project in the Godot editor on your machine.
+
+## Assets
+
+Third-party assets are CC0 only and listed in [CREDITS.md](CREDITS.md).

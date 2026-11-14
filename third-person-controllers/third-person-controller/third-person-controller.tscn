@@ -12,126 +12,142 @@
 [ext_resource type="Script" uid="uid://cnmqqpll8qs3o" path="res://third-person-controller/state-machine/wall_slide.gd" id="8_er4ly"]
 [ext_resource type="PackedScene" uid="uid://cq0bb4yx3m4ay" path="res://health-bar/health-bar-3d.tscn" id="8_mditm"]
 [ext_resource type="Script" uid="uid://cedv2cnl3b2l" path="res://third-person-controller/state-machine/wall_jump.gd" id="9_kdpxr"]
+[ext_resource type="PackedScene" uid="uid://lwlwbk41g2mp" path="res://third-person-controller/model/character_medium.fbx" id="char"]
+[ext_resource type="Texture2D" uid="uid://w67t7f05a8w5" path="res://third-person-controller/model/skin_cyborg.png" id="skin"]
+[ext_resource type="AnimationLibrary" uid="uid://3lgou3psli6w" path="res://third-person-controller/model/animations/idle.fbx" id="anim_idle"]
+[ext_resource type="AnimationLibrary" uid="uid://cfhsc7pjfvjcn" path="res://third-person-controller/model/animations/walk.fbx" id="anim_walk"]
+[ext_resource type="AnimationLibrary" uid="uid://chjj4ceyrebnc" path="res://third-person-controller/model/animations/run.fbx" id="anim_run"]
+[ext_resource type="AnimationLibrary" uid="uid://dty01pm04xb4w" path="res://third-person-controller/model/animations/jump.fbx" id="anim_jump"]
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_7ioe3"]
-animation = &"Armature|Fall_Idle"
+[sub_resource type="AnimationNodeAnimation" id="a_iwr_idle"]
+animation = &"idle/Root|Idle"
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_bad8i"]
-animation = &"Armature|Fall_Land_001"
+[sub_resource type="AnimationNodeAnimation" id="a_iwr_walk"]
+animation = &"walk/Root|Walk"
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_dafe8"]
-animation = &"Armature|Idle"
+[sub_resource type="AnimationNodeAnimation" id="a_iwr_run"]
+animation = &"run/Root|Run"
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_34r5w"]
-animation = &"Armature|Run Forward"
+[sub_resource type="AnimationNodeAnimation" id="a_st_idle"]
+animation = &"idle/Root|Idle"
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_x32pt"]
-animation = &"Armature|Run Backward"
+[sub_resource type="AnimationNodeAnimation" id="a_st_fwd"]
+animation = &"run/Root|Run"
 
-[sub_resource type="AnimationNodeBlendSpace1D" id="AnimationNodeBlendSpace1D_6q4bf"]
-blend_point_0/node = SubResource("AnimationNodeAnimation_dafe8")
+[sub_resource type="AnimationNodeAnimation" id="a_st_back"]
+animation = &"walk/Root|Walk"
+
+[sub_resource type="AnimationNodeAnimation" id="a_st_left"]
+animation = &"walk/Root|Walk"
+
+[sub_resource type="AnimationNodeAnimation" id="a_st_right"]
+animation = &"walk/Root|Walk"
+
+[sub_resource type="AnimationNodeAnimation" id="a_jump"]
+animation = &"jump/Root|Jump"
+
+[sub_resource type="AnimationNodeAnimation" id="a_fall"]
+animation = &"jump/Root|Jump"
+
+[sub_resource type="AnimationNodeAnimation" id="a_wall"]
+animation = &"jump/Root|Jump"
+
+[sub_resource type="AnimationNodeBlendSpace1D" id="bs_iwr"]
+blend_point_0/node = SubResource("a_iwr_idle")
 blend_point_0/pos = 0.0
-blend_point_1/node = SubResource("AnimationNodeAnimation_34r5w")
-blend_point_1/pos = 1.0
-blend_point_2/node = SubResource("AnimationNodeAnimation_x32pt")
-blend_point_2/pos = -1.0
+blend_point_1/node = SubResource("a_iwr_walk")
+blend_point_1/pos = 0.5
+blend_point_2/node = SubResource("a_iwr_run")
+blend_point_2/pos = 1.0
+min_space = 0.0
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_a0hbw"]
-animation = &"Armature|Idle"
-
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_6q4bf"]
-animation = &"Armature|Run Forward"
-
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_0bips"]
-animation = &"Armature|Run Right"
-
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_5v143"]
-animation = &"Armature|Run Backward"
-
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_jcfs8"]
-animation = &"Armature|Run Left"
-
-[sub_resource type="AnimationNodeBlendSpace2D" id="AnimationNodeBlendSpace2D_7ioe3"]
-blend_point_0/node = SubResource("AnimationNodeAnimation_a0hbw")
+[sub_resource type="AnimationNodeBlendSpace2D" id="bs_strafe"]
+blend_point_0/node = SubResource("a_st_idle")
 blend_point_0/pos = Vector2(0, 0)
-blend_point_1/node = SubResource("AnimationNodeAnimation_6q4bf")
-blend_point_1/pos = Vector2(0, 1)
-blend_point_2/node = SubResource("AnimationNodeAnimation_0bips")
-blend_point_2/pos = Vector2(1, 0)
-blend_point_3/node = SubResource("AnimationNodeAnimation_5v143")
-blend_point_3/pos = Vector2(0, -1)
-blend_point_4/node = SubResource("AnimationNodeAnimation_jcfs8")
-blend_point_4/pos = Vector2(-1, 0)
+blend_point_1/node = SubResource("a_st_fwd")
+blend_point_1/pos = Vector2(0, -1)
+blend_point_2/node = SubResource("a_st_back")
+blend_point_2/pos = Vector2(0, 1)
+blend_point_3/node = SubResource("a_st_left")
+blend_point_3/pos = Vector2(-1, 0)
+blend_point_4/node = SubResource("a_st_right")
+blend_point_4/pos = Vector2(1, 0)
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_4wikj"]
-animation = &"Armature|Jump"
-
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_s6whs"]
-animation = &"Armature|Wall_Slide_Idle"
-
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_0bips"]
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_0"]
+xfade_time = 0.15
 advance_mode = 2
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_bad8i"]
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_1"]
+xfade_time = 0.15
 advance_mode = 2
 advance_condition = &"is_strafing"
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_s6whs"]
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_2"]
+xfade_time = 0.15
 advance_mode = 2
 advance_condition = &"not_is_strafing"
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_sxcl0"]
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_3"]
+xfade_time = 0.15
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_o0hau"]
-switch_mode = 1
-advance_mode = 2
-advance_condition = &"not_is_strafing"
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_4"]
+xfade_time = 0.15
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_sn0pt"]
-switch_mode = 1
-advance_mode = 2
-advance_condition = &"is_strafing"
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_5"]
+xfade_time = 0.15
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_vvbuy"]
-switch_mode = 2
-advance_mode = 2
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_6"]
+xfade_time = 0.15
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_3k4m6"]
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_7"]
+xfade_time = 0.15
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_4wikj"]
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_8"]
+xfade_time = 0.15
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_8p6dn"]
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_9"]
+xfade_time = 0.15
 
-[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_fp0co"]
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_10"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_11"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_12"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_13"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_14"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_15"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_16"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_17"]
+xfade_time = 0.15
 
 [sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_s6whs"]
-states/End/position = Vector2(904, 167)
-states/Fall_Idle/node = SubResource("AnimationNodeAnimation_7ioe3")
+states/Fall_Idle/node = SubResource("a_fall")
 states/Fall_Idle/position = Vector2(543, 6)
-states/Fall_Land/node = SubResource("AnimationNodeAnimation_bad8i")
-states/Fall_Land/position = Vector2(556, 100)
-states/IWR/node = SubResource("AnimationNodeBlendSpace1D_6q4bf")
+states/IWR/node = SubResource("bs_iwr")
 states/IWR/position = Vector2(388, 100)
-states/IWR_Strafe/node = SubResource("AnimationNodeBlendSpace2D_7ioe3")
+states/IWR_Strafe/node = SubResource("bs_strafe")
 states/IWR_Strafe/position = Vector2(388, 183)
-states/Jump/node = SubResource("AnimationNodeAnimation_4wikj")
+states/Jump/node = SubResource("a_jump")
 states/Jump/position = Vector2(388, 21)
 states/Start/position = Vector2(254, 100)
-states/Wall_Slide_Idle/node = SubResource("AnimationNodeAnimation_s6whs")
+states/Wall_Slide_Idle/node = SubResource("a_wall")
 states/Wall_Slide_Idle/position = Vector2(694, -91)
-transitions = ["Start", "IWR", SubResource("AnimationNodeStateMachineTransition_0bips"), "IWR", "IWR_Strafe", SubResource("AnimationNodeStateMachineTransition_bad8i"), "IWR_Strafe", "IWR", SubResource("AnimationNodeStateMachineTransition_s6whs"), "Fall_Idle", "Fall_Land", SubResource("AnimationNodeStateMachineTransition_sxcl0"), "Fall_Land", "IWR", SubResource("AnimationNodeStateMachineTransition_o0hau"), "Fall_Land", "IWR_Strafe", SubResource("AnimationNodeStateMachineTransition_sn0pt"), "Jump", "Fall_Idle", SubResource("AnimationNodeStateMachineTransition_vvbuy"), "IWR", "Jump", SubResource("AnimationNodeStateMachineTransition_3k4m6"), "Fall_Idle", "Wall_Slide_Idle", SubResource("AnimationNodeStateMachineTransition_4wikj"), "Wall_Slide_Idle", "Fall_Land", SubResource("AnimationNodeStateMachineTransition_8p6dn"), "Wall_Slide_Idle", "Jump", SubResource("AnimationNodeStateMachineTransition_fp0co")]
-graph_offset = Vector2(-25, 52.8107)
+transitions = ["Start", "IWR", SubResource("t_0"), "IWR", "IWR_Strafe", SubResource("t_1"), "IWR_Strafe", "IWR", SubResource("t_2"), "IWR", "Jump", SubResource("t_3"), "IWR_Strafe", "Jump", SubResource("t_4"), "IWR", "Fall_Idle", SubResource("t_5"), "IWR_Strafe", "Fall_Idle", SubResource("t_6"), "Jump", "Fall_Idle", SubResource("t_7"), "Fall_Idle", "IWR", SubResource("t_8"), "Fall_Idle", "IWR_Strafe", SubResource("t_9"), "Fall_Idle", "Wall_Slide_Idle", SubResource("t_10"), "Wall_Slide_Idle", "Fall_Idle", SubResource("t_11"), "Wall_Slide_Idle", "Jump", SubResource("t_12"), "Wall_Slide_Idle", "IWR", SubResource("t_13"), "Wall_Slide_Idle", "IWR_Strafe", SubResource("t_14"), "Jump", "Wall_Slide_Idle", SubResource("t_15"), "Jump", "IWR", SubResource("t_16"), "Jump", "IWR_Strafe", SubResource("t_17")]
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
-radius = 0.336075
-height = 1.77824
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_visor"]
-albedo_color = Color(0.1, 0.1, 0.12, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_visor"]
-material = SubResource("StandardMaterial3D_visor")
-size = Vector3(0.4, 0.15, 0.2)
+[sub_resource type="StandardMaterial3D" id="mat_skin"]
+albedo_texture = ExtResource("skin")
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ss2ul"]
 radius = 0.336075
@@ -150,25 +166,29 @@ is_wall_slide = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.703477, 1.01086, 1.33316)
 script = ExtResource("2_1vt6q")
 
+[node name="Character" parent="Model" instance=ExtResource("char")]
+transform = Transform3D(-0.473, 0, 0, 0, 0.473, 0, 0, 0, -0.473, 0, -1.087, 0)
+
+[node name="characterMedium" parent="Model/Character/Root/Skeleton3D" index="0"]
+surface_material_override/0 = SubResource("mat_skin")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Model"]
+root_node = NodePath("../Character")
+libraries = {
+&"idle": ExtResource("anim_idle"),
+&"jump": ExtResource("anim_jump"),
+&"run": ExtResource("anim_run"),
+&"walk": ExtResource("anim_walk")
+}
+
 [node name="AnimationTree" type="AnimationTree" parent="Model"]
-active = false
-root_node = NodePath("..")
+root_node = NodePath("../Character")
 tree_root = SubResource("AnimationNodeStateMachine_s6whs")
 anim_player = NodePath("../AnimationPlayer")
 parameters/conditions/is_strafing = false
 parameters/conditions/not_is_strafing = true
-parameters/IWR/blend_position = 0.014056
-parameters/IWR_Strafe/blend_position = Vector2(-0.00126582, -0.0044843)
-
-[node name="Body" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.197998, 0)
-mesh = SubResource("CapsuleMesh_body")
-
-[node name="Visor" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, -0.28)
-mesh = SubResource("BoxMesh_visor")
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="Model"]
+parameters/IWR/blend_position = 0.0
+parameters/IWR_Strafe/blend_position = Vector2(0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.197998, 0)
@@ -225,3 +245,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.29492, 0)
 [connection signal="timeout" from="StateMachine/Dash/Duration" to="StateMachine/Dash" method="_on_duration_timeout"]
 [connection signal="timeout" from="StateMachine/Dash/Cooldown" to="StateMachine/Dash" method="_on_cooldown_timeout"]
 
+[editable path="Model/Character"]
