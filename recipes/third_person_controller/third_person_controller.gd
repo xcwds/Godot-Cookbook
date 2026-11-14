@@ -1,18 +1,18 @@
 class_name ThirdPersonController extends CharacterBody3D
 
 func _ready() -> void:
-	twist_pivot.top_level = true
-	free_camera.current = true
-	_do_aim_end()
+	aim_camera.aim_started.connect(_on_aim_started)
+	aim_camera.aim_ended.connect(_on_aim_ended)
 
 func _process(_delta: float) -> void:
-	_handle_aim()
+	if is_aiming():
+		# Face where the aim camera looks.
+		model.rotation.y = aim_camera.yaw
 
 
 @onready var model: Node3D = $Model
-@onready var twist_pivot: Node3D = $Twist
-@onready var free_camera: Camera3D = $Twist/Pitch/FreeCamSpringArm/FreeCamera
-@onready var aim_camera: Camera3D = $Model/AimCamera
+@onready var orbit_camera: OrbitCamera = $OrbitCamera
+@onready var aim_camera: AimCamera = $AimCamera
 @onready var animation_tree: AnimationTree = $Model/AnimationTree
 @onready var animation_state: AnimationNodeStateMachinePlayback = $Model/AnimationTree.get("parameters/playback")
 
@@ -55,7 +55,7 @@ func look_forward(weight: float) -> void:
 func _do_dash() -> void:
 	var input_vector := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var dash_direction := (
-		Vector3(input_vector.x, 0, input_vector.y).rotated(Vector3.UP, twist_pivot.rotation.y) if is_on_floor() and input_vector else
+		Vector3(input_vector.x, 0, input_vector.y).rotated(Vector3.UP, camera_yaw()) if is_on_floor() and input_vector else
 		Vector3.FORWARD.rotated(Vector3.UP, model.rotation.y)
 	).normalized()
 	
@@ -78,7 +78,7 @@ func _do_iwr(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0, speed)
 		velocity.z = move_toward(velocity.z, 0, speed)
 	else:
-		last_movement_direction = Vector3(input_direction.x, 0, input_direction.y).rotated(Vector3.UP, twist_pivot.rotation.y) * input_magnitude * speed
+		last_movement_direction = Vector3(input_direction.x, 0, input_direction.y).rotated(Vector3.UP, camera_yaw()) * input_magnitude * speed
 		velocity.x = last_movement_direction.x
 		velocity.z = last_movement_direction.z
 		
@@ -89,30 +89,19 @@ func _do_fall(delta: float) -> void:
 #endregion 
 
 #region aiming
-func is_aiming() -> bool: return Input.is_action_pressed("aim")
+func is_aiming() -> bool: return aim_camera.is_aiming()
 
-func _handle_aim() -> void:
-	if Input.is_action_just_pressed("aim"):
-		_do_aim_start()
-	elif Input.is_action_just_released("aim"):
-		_do_aim_end()
+## Yaw of whichever camera is active, for camera-relative movement.
+func camera_yaw() -> float:
+	return aim_camera.yaw if is_aiming() else orbit_camera.yaw
 
-func _do_aim_start() -> void:
-	aim_camera.current = true
-	aim_camera.process_mode = Node.PROCESS_MODE_INHERIT
-	free_camera.process_mode = Node.PROCESS_MODE_DISABLED
-	rotation.y = twist_pivot.rotation.y
-	model.rotation = Vector3.ZERO
+func _on_aim_started() -> void:
 	animation_tree.set("parameters/conditions/is_strafing", true)
 	animation_tree.set("parameters/conditions/not_is_strafing", false)
 
-func _do_aim_end() -> void:
-	free_camera.current = true
-	free_camera.process_mode = Node.PROCESS_MODE_INHERIT
-	aim_camera.process_mode = Node.PROCESS_MODE_DISABLED
-	rotation.y = 0
-	model.rotation = Vector3.ZERO
+func _on_aim_ended() -> void:
+	# Keep facing the aim direction instead of turning back.
+	_look_direction = Vector3.FORWARD.rotated(Vector3.UP, model.rotation.y)
 	animation_tree.set("parameters/conditions/is_strafing", false)
 	animation_tree.set("parameters/conditions/not_is_strafing", true)
-		
 #endregion

@@ -1,11 +1,8 @@
 [gd_scene format=3 uid="uid://oxyumaw1iadk"]
 
 [ext_resource type="Script" uid="uid://d0ixx1sbbgv3y" path="res://recipes/third_person_controller/third_person_controller.gd" id="1_raonk"]
-[ext_resource type="Script" uid="uid://ctoda5rjuk47g" path="res://recipes/third_person_controller/aim_camera.gd" id="2_1vt6q"]
 [ext_resource type="Script" uid="uid://cihh3m2nvhc0b" path="res://recipes/state_machine/state_machine.gd" id="2_hq6i3"]
-[ext_resource type="Script" uid="uid://crr8qcwlunyou" path="res://recipes/third_person_controller/twist.gd" id="2_i6k8c"]
 [ext_resource type="Script" uid="uid://d2tx5e4nqly0v" path="res://recipes/third_person_controller/states/idle_walk_run.gd" id="3_otdli"]
-[ext_resource type="Script" uid="uid://b2r8i0h26xa10" path="res://recipes/third_person_controller/free_cam_spring_arm.gd" id="3_qxhmk"]
 [ext_resource type="Script" uid="uid://dq5nuw1p8r2m5" path="res://recipes/third_person_controller/states/jump.gd" id="4_i6k8c"]
 [ext_resource type="Script" uid="uid://d3bo8vc5ho77h" path="res://recipes/third_person_controller/states/fall.gd" id="5_otdli"]
 [ext_resource type="Script" uid="uid://dnyuk46th8ggg" path="res://recipes/third_person_controller/states/dash.gd" id="7_yid2g"]
@@ -20,6 +17,9 @@
 [ext_resource type="AnimationLibrary" uid="uid://dty01pm04xb4w" path="res://recipes/third_person_controller/model/animations/jump.fbx" id="anim_jump"]
 
 [ext_resource type="Script" path="res://recipes/health/health.gd" id="health"]
+
+[ext_resource type="PackedScene" path="res://recipes/orbit_camera/orbit_camera.tscn" id="orbit_camera"]
+[ext_resource type="PackedScene" path="res://recipes/aim_camera/aim_camera.tscn" id="aim_camera"]
 
 [sub_resource type="AnimationNodeAnimation" id="a_iwr_idle"]
 animation = &"idle/Root|Idle"
@@ -155,18 +155,12 @@ albedo_texture = ExtResource("skin")
 radius = 0.336075
 height = 1.77824
 
-[sub_resource type="SeparationRayShape3D" id="SeparationRayShape3D_yid2g"]
-
 [node name="Player" type="CharacterBody3D"]
 collision_layer = 2
 script = ExtResource("1_raonk")
 is_wall_slide = true
 
 [node name="Model" type="Node3D" parent="."]
-
-[node name="AimCamera" type="Camera3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.703477, 1.01086, 1.33316)
-script = ExtResource("2_1vt6q")
 
 [node name="Character" parent="Model" instance=ExtResource("char")]
 transform = Transform3D(-0.473, 0, 0, 0, 0.473, 0, 0, 0, -0.473, 0, -1.087, 0)
@@ -196,23 +190,16 @@ parameters/IWR_Strafe/blend_position = Vector2(0, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.197998, 0)
 shape = SubResource("CapsuleShape3D_ss2ul")
 
-[node name="Twist" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-script = ExtResource("2_i6k8c")
-look_invert_y = true
-
-[node name="Pitch" type="Node3D" parent="Twist"]
-transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0, 0)
-
-[node name="FreeCamSpringArm" type="SpringArm3D" parent="Twist/Pitch"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.7, 0)
-shape = SubResource("SeparationRayShape3D_yid2g")
-spring_length = 5.0
-script = ExtResource("3_qxhmk")
+[node name="OrbitCamera" parent="." node_paths=PackedStringArray("target") instance=ExtResource("orbit_camera")]
+target = NodePath("..")
+shoulder_offset = Vector3(1, 0, 0)
 zoom_min = 0.5
+zoom_max = 5.0
 
-[node name="FreeCamera" type="Camera3D" parent="Twist/Pitch/FreeCamSpringArm"]
-transform = Transform3D(1, 0, 0, 0, 1, 1.49012e-08, 0, -1.49012e-08, 1, 0.2, 1, 0)
+[node name="AimCamera" parent="." node_paths=PackedStringArray("target", "orbit_camera") instance=ExtResource("aim_camera")]
+target = NodePath("..")
+target_offset = Vector3(0, 0.45, 0)
+orbit_camera = NodePath("../OrbitCamera")
 
 [node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
 script = ExtResource("2_hq6i3")

@@ -7,7 +7,9 @@ Starter recipes for 3D game development in Godot 4. Each recipe is a small folde
 | Recipe | What it is |
 |---|---|
 | [state_machine](recipes/state_machine/) | Node-based finite state machine. |
-| [third_person_controller](recipes/third_person_controller/) | Character movement with dash and wall jump, orbit camera and aim camera. |
+| [third_person_controller](recipes/third_person_controller/) | Character movement with dash and wall jump, wired to the cameras and health. |
+| [orbit_camera](recipes/orbit_camera/) | Third-person camera that follows, orbits, zooms and avoids walls. |
+| [aim_camera](recipes/aim_camera/) | Over-the-shoulder camera that takes over while aiming. |
 | [health](recipes/health/) | Hit points as a node, with damage, heal and signals. |
 | [health_bar](recipes/health_bar/) | 2D bar that follows a health node, and a billboarded 3D version. |
 | [pause_menu](recipes/pause_menu/) | Pause, resume, restart and quit. |

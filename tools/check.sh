@@ -14,7 +14,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 GODOT="${GODOT:-godot}"
 SMOKE_FRAMES=120
-SCRIPT_DIRS=(recipes browser)
+SCRIPT_DIRS=(recipes browser shared tests)
 
 # Godot often exits 0 despite script or resource errors, so the log is checked as well.
 run_godot() {

@@ -1,0 +1,24 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://recipes/orbit_camera/demo.gd" id="script"]
+[ext_resource type="PackedScene" path="res://shared/demo_level.tscn" id="level"]
+[ext_resource type="PackedScene" path="res://shared/demo_walker.tscn" id="walker"]
+[ext_resource type="PackedScene" path="res://recipes/orbit_camera/orbit_camera.tscn" id="orbit_camera"]
+
+[node name="Demo" type="Node3D"]
+script = ExtResource("script")
+
+[node name="DemoLevel" parent="." instance=ExtResource("level")]
+
+[node name="Walker" parent="." instance=ExtResource("walker")]
+
+[node name="OrbitCamera" parent="." node_paths=PackedStringArray("target") instance=ExtResource("orbit_camera")]
+target = NodePath("../Walker")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="UI"]
+offset_left = 32.0
+offset_top = 32.0
+text = "Mouse, arrow keys or right stick to look. Mouse wheel to zoom.
+The camera pulls in when a pillar or wall gets in the way."
