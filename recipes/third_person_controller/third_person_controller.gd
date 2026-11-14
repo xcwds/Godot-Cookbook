@@ -2,8 +2,6 @@ class_name ThirdPersonController extends CharacterBody3D
 
 func _ready() -> void:
 	twist_pivot.top_level = true
-	$HealthBar3d.set_max_value(max_hp)
-	$HealthBar3d.update_healthbar(hp)
 	free_camera.current = true
 	_do_aim_end()
 
@@ -17,17 +15,6 @@ func _process(_delta: float) -> void:
 @onready var aim_camera: Camera3D = $Model/AimCamera
 @onready var animation_tree: AnimationTree = $Model/AnimationTree
 @onready var animation_state: AnimationNodeStateMachinePlayback = $Model/AnimationTree.get("parameters/playback")
-
-@export_category("Health Options")
-@export var hp := 10.0:
-	set(v):
-		hp = v
-		$HealthBar3d.update_healthbar(v)
-
-@export var max_hp := 10.0:
-	set(v):
-		max_hp = v
-		$HealthBar3d.set_max_value(v)
 
 #region movement
 @export_category("Movement Options")

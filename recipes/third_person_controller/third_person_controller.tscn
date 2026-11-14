@@ -19,6 +19,8 @@
 [ext_resource type="AnimationLibrary" uid="uid://chjj4ceyrebnc" path="res://recipes/third_person_controller/model/animations/run.fbx" id="anim_run"]
 [ext_resource type="AnimationLibrary" uid="uid://dty01pm04xb4w" path="res://recipes/third_person_controller/model/animations/jump.fbx" id="anim_jump"]
 
+[ext_resource type="Script" path="res://recipes/health/health.gd" id="health"]
+
 [sub_resource type="AnimationNodeAnimation" id="a_iwr_idle"]
 animation = &"idle/Root|Idle"
 
@@ -239,8 +241,12 @@ script = ExtResource("8_er4ly")
 [node name="WallJump" type="Node" parent="StateMachine"]
 script = ExtResource("9_kdpxr")
 
-[node name="HealthBar3d" parent="." instance=ExtResource("8_mditm")]
+[node name="Health" type="Node" parent="."]
+script = ExtResource("health")
+
+[node name="HealthBar3d" parent="." node_paths=PackedStringArray("health") instance=ExtResource("8_mditm")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.29492, 0)
+health = NodePath("../Health")
 
 [connection signal="timeout" from="StateMachine/Dash/Duration" to="StateMachine/Dash" method="_on_duration_timeout"]
 [connection signal="timeout" from="StateMachine/Dash/Cooldown" to="StateMachine/Dash" method="_on_cooldown_timeout"]

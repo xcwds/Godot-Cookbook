@@ -1,35 +1,55 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://recipes/health_bar/demo.gd" id="script"]
+[ext_resource type="Script" path="res://recipes/health/health.gd" id="health"]
 [ext_resource type="PackedScene" uid="uid://dpvorffbiscjj" path="res://recipes/health_bar/health_bar_2d.tscn" id="bar_2d"]
 [ext_resource type="PackedScene" uid="uid://cq0bb4yx3m4ay" path="res://recipes/health_bar/health_bar_3d.tscn" id="bar_3d"]
 
 [node name="Demo" type="Node3D"]
 script = ExtResource("script")
 
+[node name="Health" type="Node" parent="."]
+script = ExtResource("health")
+max_health = 100.0
+
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
 
-[node name="HealthBar3d" parent="." instance=ExtResource("bar_3d")]
+[node name="HealthBar3d" parent="." node_paths=PackedStringArray("health") instance=ExtResource("bar_3d")]
+health = NodePath("../Health")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="Layout" type="VBoxContainer" parent="UI"]
 offset_left = 32.0
 offset_top = 32.0
-offset_right = 332.0
+offset_right = 432.0
 offset_bottom = 160.0
 theme_override_constants/separation = 12
 
 [node name="Label" type="Label" parent="UI/Layout"]
 layout_mode = 2
-text = "Drag the slider. 2D bar below, 3D billboard in the scene."
+text = "Both bars follow the same Health node: 2D below, 3D billboard in the scene."
 
-[node name="HealthBar2d" parent="UI/Layout" instance=ExtResource("bar_2d")]
+[node name="HealthBar2d" parent="UI/Layout" node_paths=PackedStringArray("health") instance=ExtResource("bar_2d")]
+layout_mode = 2
+health = NodePath("../../../Health")
+
+[node name="Buttons" type="HBoxContainer" parent="UI/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Damage" type="Button" parent="UI/Layout/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
+text = "Damage 15"
 
-[node name="Slider" type="HSlider" parent="UI/Layout"]
+[node name="Heal" type="Button" parent="UI/Layout/Buttons"]
 unique_name_in_owner = true
 layout_mode = 2
-value = 100.0
+text = "Heal 10"
+
+[node name="Reset" type="Button" parent="UI/Layout/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reset"
