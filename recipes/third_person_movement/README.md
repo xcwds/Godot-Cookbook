@@ -39,7 +39,7 @@ The input action names are constants at the top of `third_person_character.gd`.
 ## Scene layout
 
 - `StateMachine` with `Ground`, `Air`, `Dash` and `WallSlide`. Each state's script in `states/` is the whole of that move; `third_person_character.gd` only holds settings and shared helpers. To remove dashing or wall sliding, turn off its `*_enabled` setting.
-- `Model` holds everything visual: the character mesh, `AnimationPlayer`, `AnimationTree` and `Animator`.
+- `Model` holds everything visual: the character mesh, `AnimationPlayer`, `AnimationTree` and `Animator`. The model carries the facing: it turns toward the movement direction, and the root does not turn. Rotate the root to choose which way the character faces when it spawns. Use `get_model_yaw()`, `set_model_yaw()` and `get_facing_direction()`, which work in world space, rather than `Model.rotation`, which is relative to the root.
 - `Animator` (`character_animator.gd`) picks the animation from the current state and velocity. The movement code never touches animations.
 
 ### Swapping the model

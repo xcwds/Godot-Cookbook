@@ -72,7 +72,7 @@ func _physics_process(delta: float) -> void:
 	# On the physics tick like all other movement, so that the engine can
 	# smooth it between ticks when physics interpolation is on.
 	if strafe:
-		model.rotation.y = get_view_yaw()
+		set_model_yaw(get_view_yaw())
 
 
 ## Yaw of the view in radians. Input is rotated by this.
@@ -92,7 +92,18 @@ func get_move_direction() -> Vector3:
 
 ## The direction the model is facing, on the ground plane.
 func get_facing_direction() -> Vector3:
-	return Vector3.FORWARD.rotated(Vector3.UP, model.rotation.y)
+	return Vector3.FORWARD.rotated(Vector3.UP, get_model_yaw())
+
+
+## World-space yaw of the model in radians. The model turns on its own, so this
+## differs from the root's yaw, which only sets the facing the character spawns with.
+func get_model_yaw() -> float:
+	return model.global_rotation.y
+
+
+## Turns the model to a world-space yaw, whatever the root's rotation.
+func set_model_yaw(yaw: float) -> void:
+	model.global_rotation.y = yaw
 
 
 ## Sets horizontal velocity from the movement input and turns the model.
@@ -110,10 +121,10 @@ func face(direction: Vector3, delta := -1.0) -> void:
 		return
 	var target := Vector3.FORWARD.signed_angle_to(direction, Vector3.UP)
 	if delta < 0.0:
-		model.rotation.y = target
+		set_model_yaw(target)
 	else:
 		var weight := 1.0 - exp(-rotation_speed * delta)
-		model.rotation.y = lerp_angle(model.rotation.y, target, weight)
+		set_model_yaw(lerp_angle(get_model_yaw(), target, weight))
 
 
 func apply_gravity(delta: float) -> void:

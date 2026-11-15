@@ -33,6 +33,7 @@ func _initialize() -> void:
 	await _test_dash_goes_where_the_character_faces()
 	await _test_one_air_dash_per_jump()
 	await _test_wall_jump()
+	await _test_rotated_root_faces_where_it_goes()
 	if _failures == 0:
 		print("test_third_person_movement: OK")
 	quit(1 if _failures > 0 else 0)
@@ -65,10 +66,21 @@ func _reset(at: Vector3, facing_yaw := 0.0) -> void:
 		Input.action_release(action)
 	_character.position = at
 	_character.velocity = Vector3.ZERO
-	_character.model.rotation.y = facing_yaw
+	_character.model.global_rotation.y = facing_yaw
 	await _wait(0.6)
 	_jumps = 0
 	_dashes = 0
+
+
+## Where the model faces in world space, on the ground plane.
+func _model_forward() -> Vector3:
+	var forward := -_character.model.global_basis.z
+	forward.y = 0.0
+	return forward.normalized()
+
+
+func _horizontal_velocity() -> Vector3:
+	return Vector3(_character.velocity.x, 0.0, _character.velocity.z).normalized()
 
 
 func _test_walks_relative_to_view() -> void:
@@ -195,3 +207,44 @@ func _test_wall_jump() -> void:
 	await _wait(0.1)
 	_check(_jumps == 1 and _state() == &"Air", "jump pushes off the wall")
 	_check(_character.velocity.z > 0.0 and _character.position.y > y_before - slid, "up and away")
+
+
+## A level that spawns the player facing another way rotates the root. The
+## model must still face the world-space direction it moves in.
+func _test_rotated_root_faces_where_it_goes() -> void:
+	_character.rotation.y = PI / 2.0
+
+	await _reset(Vector3(0, 1.2, 0))
+	Input.action_press(&"move_up")
+	await _wait(0.5)
+	var travel := _horizontal_velocity()
+	_check(travel.dot(Vector3.FORWARD) > 0.99, "a rotated root still walks along -Z")
+	_check(
+		_model_forward().dot(travel) > 0.99,
+		"and its model faces that way, faces %s" % _model_forward()
+	)
+
+	await _reset(Vector3(0, 1.2, 0), PI / 2.0)
+	await _tap(&"dash")
+	_check(_state() == &"Dash", "a rotated root dashes")
+	_check(
+		_horizontal_velocity().dot(Vector3.LEFT) > 0.99,
+		"a dash with no input goes where the model faces (-X), goes %s" % _horizontal_velocity()
+	)
+	_check(_model_forward().dot(Vector3.LEFT) > 0.99, "and the model keeps facing -X")
+
+	await _reset(Vector3(0, 1.2, 0))
+	var view := Node3D.new()
+	view.rotation.y = -PI / 2.0
+	root.add_child(view)
+	_character.view = view
+	_character.strafe = true
+	await _wait(0.1)
+	_check(
+		_model_forward().dot(Vector3.RIGHT) > 0.99,
+		"strafing faces the view (+X), faces %s" % _model_forward()
+	)
+	_character.strafe = false
+	_character.view = null
+	view.free()
+	_character.rotation.y = 0.0

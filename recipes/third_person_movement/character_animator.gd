@@ -37,5 +37,5 @@ func _process(_delta: float) -> void:
 	)
 	animation_tree.set("parameters/Locomotion/blend_position", minf(horizontal.length(), 1.0))
 	# Velocity relative to where the model faces: x is right, y is back.
-	var local := horizontal.rotated(Vector3.UP, -character.model.rotation.y)
+	var local := horizontal.rotated(Vector3.UP, -character.get_model_yaw())
 	animation_tree.set("parameters/Strafe/blend_position", Vector2(local.x, local.z).limit_length())
