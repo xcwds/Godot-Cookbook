@@ -148,5 +148,13 @@ func _test_prompt_follows_focus() -> void:
 	actor.position = Vector3(50, 0, 0)
 	await _settle()
 	_check(not prompt.visible, "prompt hides again")
+
+	actor.position = Vector3.ZERO
+	await _settle()
+	_check(prompt.visible, "and shows when back in reach")
+	target.free()
+	target = _make_interactable(Vector3(60, 0, 0))
+	await _settle()
+	_check(not prompt.visible, "prompt hides when the focused interactable is freed")
 	for node: Node in [actor, prompt, target]:
 		node.free()

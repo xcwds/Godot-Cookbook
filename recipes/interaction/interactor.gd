@@ -19,6 +19,8 @@ signal focus_changed(interactable: Interactable)
 ## The interactable that would be used right now, or null.
 var focused: Interactable
 
+var _has_focus := false
+
 
 func _ready() -> void:
 	if actor == null:
@@ -69,13 +71,15 @@ func _is_in_front(offset: Vector3) -> bool:
 
 
 func _set_focused(interactable: Interactable) -> void:
-	if not is_instance_valid(focused):
-		focused = null
-	if interactable == focused:
+	# A focused interactable that was freed counts as lost focus, which the
+	# reference alone cannot show: it already compares equal to null.
+	var current: Interactable = focused if is_instance_valid(focused) else null
+	if interactable == current and _has_focus == (current != null):
 		return
-	if focused != null:
-		focused.unfocused.emit()
+	if current != null:
+		current.unfocused.emit()
 	focused = interactable
+	_has_focus = focused != null
 	if focused != null:
 		focused.focused.emit()
 	focus_changed.emit(focused)

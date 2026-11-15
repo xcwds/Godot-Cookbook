@@ -14,6 +14,7 @@ Starter recipes for 3D game development in Godot 4. Each recipe is a small folde
 | [aim_camera](recipes/aim_camera/) | Over-the-shoulder camera that takes over while aiming. |
 | [chase_enemy](recipes/chase_enemy/) | Enemy that chases a target along the navigation mesh. |
 | [moving_platform](recipes/moving_platform/) | Platform that travels between waypoints and carries characters. |
+| [inventory](recipes/inventory/) | Pickups, a count-per-item inventory and a panel that lists it. |
 | [interaction](recipes/interaction/) | Walk up to something, see a prompt, press a button. |
 | [health](recipes/health/) | Hit points as a node, with damage, heal and signals. |
 | [projectile](recipes/projectile/) | Projectiles, a launcher and a reusable object pool. |
