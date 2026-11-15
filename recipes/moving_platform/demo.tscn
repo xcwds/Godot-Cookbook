@@ -1,0 +1,60 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://shared/demo_level.tscn" id="level"]
+[ext_resource type="PackedScene" uid="uid://oxyumaw1iadk" path="res://recipes/third_person_movement/third_person_character.tscn" id="player"]
+[ext_resource type="PackedScene" path="res://recipes/orbit_camera/orbit_camera.tscn" id="orbit_camera"]
+[ext_resource type="PackedScene" uid="uid://cq1is8bcp5mri" path="res://recipes/pause_menu/pause_menu.tscn" id="pause_menu"]
+[ext_resource type="PackedScene" path="res://recipes/moving_platform/moving_platform.tscn" id="platform"]
+
+[sub_resource type="StandardMaterial3D" id="ledge_material"]
+albedo_color = Color(0.75, 0.7, 0.3, 1)
+
+[node name="Demo" type="Node3D"]
+
+[node name="DemoLevel" parent="." instance=ExtResource("level")]
+
+[node name="Player" parent="." instance=ExtResource("player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="OrbitCamera" parent="." node_paths=PackedStringArray("target") instance=ExtResource("orbit_camera")]
+target = NodePath("../Player")
+target_offset = Vector3(0, 1.2, 0)
+
+[node name="Lift" parent="." instance=ExtResource("platform")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, -5)
+waypoints = Array[Vector3]([Vector3(0, 4, 0)])
+wait_time = 2.0
+
+[node name="LedgeNear" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, -8.5)
+material_override = SubResource("ledge_material")
+use_collision = true
+size = Vector3(4, 3.9, 4)
+
+[node name="Shuttle" parent="." instance=ExtResource("platform")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.7, -12)
+waypoints = Array[Vector3]([Vector3(0, 0, -5)])
+wait_time = 1.5
+
+[node name="LedgeFar" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, -20.5)
+material_override = SubResource("ledge_material")
+use_collision = true
+size = Vector3(4, 3.9, 4)
+
+[node name="Circuit" parent="." instance=ExtResource("platform")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.5, 0)
+waypoints = Array[Vector3]([Vector3(6, 0, 0), Vector3(6, 2, 6), Vector3(0, 2, 6)])
+speed = 3.0
+wait_time = 0.5
+loop_mode = 1
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Hint" type="Label" parent="UI"]
+offset_left = 32.0
+offset_top = 32.0
+text = "Ride the lift ahead up to the yellow ledge, then take the shuttle across to the far one.
+The platform on the right runs a four-stop circuit."
+
+[node name="PauseMenu" parent="." instance=ExtResource("pause_menu")]
