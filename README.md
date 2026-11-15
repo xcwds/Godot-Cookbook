@@ -8,6 +8,7 @@ Starter recipes for 3D game development in Godot 4. Each recipe is a small folde
 |---|---|
 | [state_machine](recipes/state_machine/) | Node-based finite state machine. |
 | [third_person_movement](recipes/third_person_movement/) | Character that runs, jumps, dashes, wall slides and wall jumps. |
+| [first_person_movement](recipes/first_person_movement/) | First-person character: look, walk, sprint, crouch and jump. |
 | [orbit_camera](recipes/orbit_camera/) | Third-person camera that follows, orbits, zooms and avoids walls. |
 | [aim_camera](recipes/aim_camera/) | Over-the-shoulder camera that takes over while aiming. |
 | [interaction](recipes/interaction/) | Walk up to something, see a prompt, press a button. |
