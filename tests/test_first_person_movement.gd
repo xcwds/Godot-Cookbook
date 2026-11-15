@@ -68,6 +68,14 @@ func _horizontal_speed() -> float:
 	return Vector2(_character.velocity.x, _character.velocity.z).length()
 
 
+## True when the horizontal speed is [param expected]. After move_and_slide()
+## the speed on the floor varies from run to run by a few hundred-thousandths
+## (floor contact is resolved slightly differently), which is_equal_approx()
+## treats as a difference, so compare with a tolerance a player cannot see.
+func _moves_at(expected: float) -> bool:
+	return absf(_horizontal_speed() - expected) < 0.01
+
+
 func _test_walk_and_sprint() -> void:
 	# Well back from the beam, so there is room to sprint.
 	await _reset(Vector3(0, 0.1, 15))
@@ -77,11 +85,11 @@ func _test_walk_and_sprint() -> void:
 	var early := _horizontal_speed()
 	_check(early > 0.0 and early < _character.walk_speed, "speeds up over time, not at once")
 	await _wait(0.5)
-	_check(is_equal_approx(_horizontal_speed(), _character.walk_speed), "reaches walk speed")
+	_check(_moves_at(_character.walk_speed), "reaches walk speed")
 	_check(_character.position.z < 13.5, "move_up walks forward along -Z")
 	Input.action_press(&"sprint")
 	await _wait(0.5)
-	_check(is_equal_approx(_horizontal_speed(), _character.sprint_speed), "sprint is faster")
+	_check(_moves_at(_character.sprint_speed), "sprint is faster")
 	_check(_character.is_sprinting(), "and reports sprinting")
 
 
@@ -134,7 +142,7 @@ func _test_crouch() -> void:
 	Input.action_press(&"move_up")
 	Input.action_press(&"sprint")
 	await _wait(0.5)
-	_check(is_equal_approx(_horizontal_speed(), _character.crouch_speed), "crouching is slow")
+	_check(_moves_at(_character.crouch_speed), "crouching is slow")
 	_check(not _character.is_sprinting(), "and cannot sprint")
 	Input.action_release(&"move_up")
 	Input.action_release(&"sprint")
