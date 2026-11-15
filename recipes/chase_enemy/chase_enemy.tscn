@@ -1,0 +1,55 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://recipes/chase_enemy/chase_enemy.gd" id="script"]
+[ext_resource type="Script" path="res://recipes/state_machine/state_machine.gd" id="state_machine"]
+[ext_resource type="Script" path="res://recipes/chase_enemy/states/idle.gd" id="idle"]
+[ext_resource type="Script" path="res://recipes/chase_enemy/states/chase.gd" id="chase"]
+
+[sub_resource type="CapsuleShape3D" id="body_shape"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="CapsuleMesh" id="body_mesh"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="body_material"]
+albedo_color = Color(0.75, 0.25, 0.25, 1)
+
+[sub_resource type="StandardMaterial3D" id="visor_material"]
+albedo_color = Color(0.1, 0.1, 0.12, 1)
+
+[sub_resource type="BoxMesh" id="visor_mesh"]
+material = SubResource("visor_material")
+size = Vector3(0.45, 0.15, 0.2)
+
+[node name="ChaseEnemy" type="CharacterBody3D"]
+collision_layer = 16
+script = ExtResource("script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("body_shape")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("body_mesh")
+surface_material_override/0 = SubResource("body_material")
+
+[node name="Visor" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, -0.35)
+mesh = SubResource("visor_mesh")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.5
+target_desired_distance = 0.5
+
+[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
+script = ExtResource("state_machine")
+initial_state = NodePath("Idle")
+
+[node name="Idle" type="Node" parent="StateMachine"]
+script = ExtResource("idle")
+
+[node name="Chase" type="Node" parent="StateMachine"]
+script = ExtResource("chase")

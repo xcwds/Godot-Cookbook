@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+	<rect x="2" y="2" width="124" height="124" rx="14" fill="#2f3b52" stroke="#1d2433" stroke-width="4"/>
+	<!-- chef hat -->
+	<path d="M40 74 C22 72 20 48 38 44 C40 28 60 22 68 34 C80 24 100 34 94 50 C108 56 104 74 88 74 Z" fill="#ffffff"/>
+	<rect x="40" y="74" width="48" height="22" rx="3" fill="#e6e9ef"/>
+	<path d="M52 78v14M64 78v14M76 78v14" stroke="#b9c0cc" stroke-width="3" stroke-linecap="round"/>
+	<!-- cube for "3D" -->
+	<path d="M64 100l14 6v0l-14 6l-14-6z" fill="#f2b632"/>
+</svg>

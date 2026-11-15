@@ -1,0 +1,72 @@
+name: Latest stable Godot
+
+# Once a week, checks whether a newer stable Godot than the pinned one exists.
+# If so, runs the checks against it and opens an issue with the result.
+on:
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  latest-stable:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare pinned and latest versions
+        id: versions
+        run: |
+          pinned="$(tr -d '[:space:]' < .godot-version)"
+          latest="$(gh api repos/godotengine/godot/releases/latest --jq .tag_name)"
+          echo "pinned=$pinned" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "Pinned: $pinned, latest stable: $latest"
+
+      - name: Install latest Godot
+        if: steps.versions.outputs.latest != steps.versions.outputs.pinned
+        env:
+          LATEST: ${{ steps.versions.outputs.latest }}
+        run: sudo GODOT_VERSION="$LATEST" tools/install_godot.sh
+
+      - name: Install gdtoolkit
+        if: steps.versions.outputs.latest != steps.versions.outputs.pinned
+        run: pipx install "gdtoolkit==4.*"
+
+      - name: Run checks against latest
+        id: check
+        if: steps.versions.outputs.latest != steps.versions.outputs.pinned
+        continue-on-error: true
+        run: tools/check.sh
+
+      - name: Open an issue
+        if: steps.versions.outputs.latest != steps.versions.outputs.pinned
+        env:
+          PINNED: ${{ steps.versions.outputs.pinned }}
+          LATEST: ${{ steps.versions.outputs.latest }}
+          OUTCOME: ${{ steps.check.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Upgrade to Godot $LATEST"
+          existing="$(gh issue list --state open --search "in:title \"$title\"" --json number --jq length)"
+          if [ "$existing" -gt 0 ]; then
+            echo "An issue for $LATEST is already open."
+            exit 0
+          fi
+          if [ "$OUTCOME" = "success" ]; then
+            result="The checks pass on $LATEST without changes."
+          else
+            result="The checks fail on $LATEST; see the run for details."
+          fi
+          gh issue create --title "$title" --body "Godot $LATEST is the latest stable release; the cookbook is pinned to $PINNED.
+
+          $result
+
+          Run: $RUN_URL
+
+          Follow docs/upgrading.md to upgrade."

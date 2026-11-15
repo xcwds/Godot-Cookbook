@@ -1,0 +1,25 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://recipes/aim_camera/aim_camera.gd" id="script"]
+
+[sub_resource type="SphereShape3D" id="arm_shape"]
+radius = 0.2
+
+[node name="AimCamera" type="Node3D"]
+script = ExtResource("script")
+target_offset = Vector3(0, 1.5, 0)
+shoulder_offset = Vector3(0.55, 0, 0)
+active = false
+pitch_min_degrees = -50.0
+pitch_max_degrees = 50.0
+follow_speed = 0.0
+distance = 2.2
+zoom_step = 0.0
+
+[node name="Pitch" type="Node3D" parent="."]
+
+[node name="SpringArm" type="SpringArm3D" parent="Pitch"]
+shape = SubResource("arm_shape")
+spring_length = 2.2
+
+[node name="Camera" type="Camera3D" parent="Pitch/SpringArm"]

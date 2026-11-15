@@ -1,0 +1,179 @@
+[gd_scene format=3 uid="uid://oxyumaw1iadk"]
+
+[ext_resource type="Script" uid="uid://cihh3m2nvhc0b" path="res://recipes/state_machine/state_machine.gd" id="state_machine"]
+[ext_resource type="Script" uid="uid://d0ixx1sbbgv3y" path="res://recipes/third_person_movement/third_person_character.gd" id="character"]
+[ext_resource type="Script" uid="uid://d2tx5e4nqly0v" path="res://recipes/third_person_movement/states/ground.gd" id="ground"]
+[ext_resource type="Script" uid="uid://d3bo8vc5ho77h" path="res://recipes/third_person_movement/states/air.gd" id="air"]
+[ext_resource type="Script" uid="uid://dnyuk46th8ggg" path="res://recipes/third_person_movement/states/dash.gd" id="dash"]
+[ext_resource type="Script" uid="uid://cnmqqpll8qs3o" path="res://recipes/third_person_movement/states/wall_slide.gd" id="wall_slide"]
+[ext_resource type="PackedScene" uid="uid://lwlwbk41g2mp" path="res://recipes/third_person_movement/model/character_medium.fbx" id="char"]
+[ext_resource type="Texture2D" uid="uid://w67t7f05a8w5" path="res://recipes/third_person_movement/model/skin_cyborg.png" id="skin"]
+[ext_resource type="AnimationLibrary" uid="uid://3lgou3psli6w" path="res://recipes/third_person_movement/model/animations/idle.fbx" id="anim_idle"]
+[ext_resource type="AnimationLibrary" uid="uid://cfhsc7pjfvjcn" path="res://recipes/third_person_movement/model/animations/walk.fbx" id="anim_walk"]
+[ext_resource type="AnimationLibrary" uid="uid://chjj4ceyrebnc" path="res://recipes/third_person_movement/model/animations/run.fbx" id="anim_run"]
+[ext_resource type="AnimationLibrary" uid="uid://dty01pm04xb4w" path="res://recipes/third_person_movement/model/animations/jump.fbx" id="anim_jump"]
+[ext_resource type="Script" path="res://recipes/third_person_movement/character_animator.gd" id="animator"]
+
+[sub_resource type="AnimationNodeAnimation" id="a_idle"]
+animation = &"idle/Root|Idle"
+
+[sub_resource type="AnimationNodeAnimation" id="a_walk"]
+animation = &"walk/Root|Walk"
+
+[sub_resource type="AnimationNodeAnimation" id="a_run"]
+animation = &"run/Root|Run"
+
+[sub_resource type="AnimationNodeAnimation" id="a_st_idle"]
+animation = &"idle/Root|Idle"
+
+[sub_resource type="AnimationNodeAnimation" id="a_st_fwd"]
+animation = &"run/Root|Run"
+
+[sub_resource type="AnimationNodeAnimation" id="a_st_back"]
+animation = &"walk/Root|Walk"
+
+[sub_resource type="AnimationNodeAnimation" id="a_st_left"]
+animation = &"walk/Root|Walk"
+
+[sub_resource type="AnimationNodeAnimation" id="a_st_right"]
+animation = &"walk/Root|Walk"
+
+[sub_resource type="AnimationNodeAnimation" id="a_air"]
+animation = &"jump/Root|Jump"
+
+[sub_resource type="AnimationNodeAnimation" id="a_wall"]
+animation = &"jump/Root|Jump"
+
+[sub_resource type="AnimationNodeBlendSpace1D" id="bs_locomotion"]
+blend_point_0/node = SubResource("a_idle")
+blend_point_0/pos = 0.0
+blend_point_1/node = SubResource("a_walk")
+blend_point_1/pos = 0.5
+blend_point_2/node = SubResource("a_run")
+blend_point_2/pos = 1.0
+min_space = 0.0
+
+[sub_resource type="AnimationNodeBlendSpace2D" id="bs_strafe"]
+blend_point_0/node = SubResource("a_st_idle")
+blend_point_0/pos = Vector2(0, 0)
+blend_point_1/node = SubResource("a_st_fwd")
+blend_point_1/pos = Vector2(0, -1)
+blend_point_2/node = SubResource("a_st_back")
+blend_point_2/pos = Vector2(0, 1)
+blend_point_3/node = SubResource("a_st_left")
+blend_point_3/pos = Vector2(-1, 0)
+blend_point_4/node = SubResource("a_st_right")
+blend_point_4/pos = Vector2(1, 0)
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_start"]
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_0"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_1"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_2"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_3"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_4"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_5"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_6"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_7"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_8"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_9"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_10"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="t_11"]
+xfade_time = 0.15
+
+[sub_resource type="AnimationNodeStateMachine" id="animation_states"]
+states/Air/node = SubResource("a_air")
+states/Air/position = Vector2(560, 20)
+states/Locomotion/node = SubResource("bs_locomotion")
+states/Locomotion/position = Vector2(400, 100)
+states/Start/position = Vector2(240, 100)
+states/Strafe/node = SubResource("bs_strafe")
+states/Strafe/position = Vector2(400, 190)
+states/WallSlide/node = SubResource("a_wall")
+states/WallSlide/position = Vector2(700, 100)
+transitions = ["Start", "Locomotion", SubResource("t_start"), "Locomotion", "Strafe", SubResource("t_0"), "Locomotion", "Air", SubResource("t_1"), "Locomotion", "WallSlide", SubResource("t_2"), "Strafe", "Locomotion", SubResource("t_3"), "Strafe", "Air", SubResource("t_4"), "Strafe", "WallSlide", SubResource("t_5"), "Air", "Locomotion", SubResource("t_6"), "Air", "Strafe", SubResource("t_7"), "Air", "WallSlide", SubResource("t_8"), "WallSlide", "Locomotion", SubResource("t_9"), "WallSlide", "Strafe", SubResource("t_10"), "WallSlide", "Air", SubResource("t_11")]
+
+[sub_resource type="StandardMaterial3D" id="mat_skin"]
+albedo_texture = ExtResource("skin")
+
+[sub_resource type="CapsuleShape3D" id="body_shape"]
+radius = 0.336075
+height = 1.77824
+
+[node name="ThirdPersonCharacter" type="CharacterBody3D"]
+collision_layer = 2
+script = ExtResource("character")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.197998, 0)
+shape = SubResource("body_shape")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Character" parent="Model" instance=ExtResource("char")]
+transform = Transform3D(-0.473, 0, 0, 0, 0.473, 0, 0, 0, -0.473, 0, -1.087, 0)
+
+[node name="characterMedium" parent="Model/Character/Root/Skeleton3D" index="0"]
+surface_material_override/0 = SubResource("mat_skin")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Model"]
+root_node = NodePath("../Character")
+libraries = {
+&"idle": ExtResource("anim_idle"),
+&"jump": ExtResource("anim_jump"),
+&"run": ExtResource("anim_run"),
+&"walk": ExtResource("anim_walk")
+}
+
+[node name="AnimationTree" type="AnimationTree" parent="Model"]
+root_node = NodePath("../Character")
+tree_root = SubResource("animation_states")
+anim_player = NodePath("../AnimationPlayer")
+parameters/Locomotion/blend_position = 0.0
+parameters/Strafe/blend_position = Vector2(0, 0)
+
+[node name="Animator" type="Node" parent="Model" node_paths=PackedStringArray("character", "animation_tree")]
+script = ExtResource("animator")
+character = NodePath("../..")
+animation_tree = NodePath("../AnimationTree")
+
+[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
+script = ExtResource("state_machine")
+initial_state = NodePath("Ground")
+
+[node name="Ground" type="Node" parent="StateMachine"]
+script = ExtResource("ground")
+
+[node name="Air" type="Node" parent="StateMachine"]
+script = ExtResource("air")
+
+[node name="Dash" type="Node" parent="StateMachine"]
+script = ExtResource("dash")
+
+[node name="WallSlide" type="Node" parent="StateMachine"]
+script = ExtResource("wall_slide")
+
+[editable path="Model/Character"]

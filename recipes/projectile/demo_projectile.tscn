@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://recipes/projectile/projectile.tscn" id="projectile"]
+[ext_resource type="Script" path="res://recipes/projectile/demo_projectile.gd" id="script"]
+[ext_resource type="PackedScene" path="res://recipes/hitbox/hitbox.tscn" id="hitbox"]
+
+[sub_resource type="SphereShape3D" id="hit_shape"]
+radius = 0.25
+
+[node name="DemoProjectile" instance=ExtResource("projectile")]
+script = ExtResource("script")
+
+[node name="Hitbox" parent="." instance=ExtResource("hitbox")]
+team = &"player"
+active = false
+
+[node name="CollisionShape3D" parent="Hitbox" index="0"]
+shape = SubResource("hit_shape")
+
+[editable path="Hitbox"]

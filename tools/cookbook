@@ -1,0 +1,324 @@
+#!/usr/bin/env python3
+"""Copy cookbook recipes into another Godot project.
+
+    tools/cookbook list
+    tools/cookbook info third_person_movement
+    tools/cookbook add third_person_movement --to ~/games/my_game
+
+`add` copies the recipe and the recipes it depends on, adds the input
+actions and physics layer names they need to the target's project.godot
+(without changing ones that exist), and prints what is left to do by hand.
+
+Needs only Python 3. Run it from a clone of the cookbook.
+"""
+
+import argparse
+import json
+import re
+import shutil
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+RECIPES_DIR = ROOT / "recipes"
+DEFAULT_DEST = "addons/cookbook"
+# Text files in which res://recipes/ paths are rewritten to the new location.
+TEXT_SUFFIXES = {".tscn", ".tres", ".gd", ".gdshader", ".cfg", ".import", ".md"}
+
+
+class CookbookError(Exception):
+    pass
+
+
+def read_text(path):
+    """Reads a text file as UTF-8, leaving its line endings as they are."""
+    with open(path, encoding="utf-8", newline="") as file:
+        return file.read()
+
+
+def write_text(path, text):
+    """Writes UTF-8 without translating line endings, on every platform."""
+    with open(path, "w", encoding="utf-8", newline="") as file:
+        file.write(text)
+
+
+# --- recipes -----------------------------------------------------------------
+
+
+def read_manifest(name):
+    """Reads recipes/<name>/recipe.cfg. Its values are JSON-compatible."""
+    path = RECIPES_DIR / name / "recipe.cfg"
+    if not path.is_file():
+        raise CookbookError(f"no recipe named '{name}' (try: tools/cookbook list)")
+    manifest = {}
+    for line in read_text(path).splitlines():
+        match = re.match(r"^(\w+)=(.*)$", line)
+        if not match:
+            continue
+        try:
+            manifest[match.group(1)] = json.loads(match.group(2))
+        except json.JSONDecodeError as error:
+            raise CookbookError(f"{path}: cannot read '{line}': {error}") from error
+    manifest.setdefault("name", name)
+    manifest.setdefault("description", "")
+    manifest.setdefault("depends", [])
+    manifest.setdefault("input_actions", [])
+    manifest.setdefault("physics_layers_3d", {})
+    manifest.setdefault("godot", "")
+    return manifest
+
+
+def recipe_names():
+    return sorted(p.parent.name for p in RECIPES_DIR.glob("*/recipe.cfg"))
+
+
+def with_dependencies(names):
+    """The given recipes plus everything they depend on, dependencies first."""
+    ordered = []
+
+    def visit(name, trail):
+        if name in trail:
+            raise CookbookError("dependency cycle: " + " -> ".join(trail + [name]))
+        for dependency in read_manifest(name)["depends"]:
+            visit(dependency, trail + [name])
+        if name not in ordered:
+            ordered.append(name)
+
+    for name in names:
+        visit(name, [])
+    return ordered
+
+
+def recipe_files(name):
+    """Files to copy for a recipe: everything except its demo."""
+    base = RECIPES_DIR / name
+    return sorted(
+        path.relative_to(base)
+        for path in base.rglob("*")
+        if path.is_file() and not path.name.startswith("demo")
+    )
+
+
+# --- project.godot -----------------------------------------------------------
+
+
+def split_sections(text):
+    """Splits project.godot into (header, [(section_name, body), ...])."""
+    parts = re.split(r"^\[([^\]\n]+)\]\n", text, flags=re.M)
+    sections = [(parts[i], parts[i + 1]) for i in range(1, len(parts), 2)]
+    return parts[0], sections
+
+
+def join_sections(header, sections):
+    text = header
+    for name, body in sections:
+        text += f"[{name}]\n{body}"
+    return text
+
+
+def section_entries(body):
+    """Maps each key in a section to its full text (values can span lines)."""
+    entries = {}
+    key = None
+    for line in body.splitlines(keepends=True):
+        match = re.match(r"^([\w/.\-]+)=", line)
+        if match:
+            key = match.group(1)
+            entries[key] = line
+        elif key is not None and line.strip():
+            entries[key] += line
+    return entries
+
+
+def add_entries(text, section, new_entries):
+    """Adds entries to a section, creating it if needed. Existing keys win."""
+    header, sections = split_sections(text)
+    for index, (name, body) in enumerate(sections):
+        if name == section:
+            existing = section_entries(body)
+            missing = [v for k, v in new_entries.items() if k not in existing]
+            if missing:
+                body = body.rstrip("\n") + "\n" + "".join(missing) + "\n"
+                if not body.startswith("\n"):
+                    body = "\n" + body
+                sections[index] = (name, body)
+            return join_sections(header, sections)
+    if not new_entries:
+        return text
+    body = "\n" + "".join(new_entries.values()) + "\n"
+    if not text.endswith("\n\n"):
+        text = text.rstrip("\n") + "\n\n"
+    return text + f"[{section}]\n{body}"
+
+
+def godot_minor(project_text):
+    match = re.search(r'config/features=PackedStringArray\(([^)]*)\)', project_text)
+    if not match:
+        return None
+    version = re.search(r'"(\d+)\.(\d+)"', match.group(1))
+    return (int(version.group(1)), int(version.group(2))) if version else None
+
+
+# --- commands ----------------------------------------------------------------
+
+
+def command_list(_args):
+    names = recipe_names()
+    width = max(len(name) for name in names)
+    for name in names:
+        print(f"{name.ljust(width)}  {read_manifest(name)['description']}")
+
+
+def command_info(args):
+    manifest = read_manifest(args.recipe)
+    everything = with_dependencies([args.recipe])
+    actions, layers = requirements(everything)
+    print(f"{manifest['name']} ({args.recipe})")
+    print(f"  {manifest['description']}")
+    print(f"  Godot:           {manifest['godot'] or 'any'}")
+    print(f"  Depends on:      {', '.join(everything[:-1]) or 'nothing'}")
+    print(f"  Input actions:   {', '.join(actions) or 'none'}")
+    layer_text = ", ".join(f"{number} ({name})" for name, number in layers.items())
+    print(f"  Physics layers:  {layer_text or 'none'}")
+    print(f"  Files:           {len(recipe_files(args.recipe))}, see recipes/{args.recipe}/")
+    print(f"  Read more:       recipes/{args.recipe}/README.md")
+
+
+def requirements(names):
+    """Input actions and physics layers needed by a set of recipes."""
+    actions, layers = [], {}
+    for name in names:
+        manifest = read_manifest(name)
+        for action in manifest["input_actions"]:
+            if action not in actions:
+                actions.append(action)
+        layers.update(manifest["physics_layers_3d"])
+    return actions, layers
+
+
+def command_add(args):
+    target = Path(args.to).expanduser().resolve()
+    project_file = target / "project.godot"
+    if not project_file.is_file():
+        raise CookbookError(f"{target} is not a Godot project (no project.godot)")
+    if target == ROOT:
+        raise CookbookError("the target is the cookbook itself")
+    dest = args.dest.strip("/")
+    names = with_dependencies(args.recipes)
+    project_text = read_text(project_file)
+    say = print if not args.dry_run else lambda text: print("(dry run) " + text)
+
+    # 1. Copy the recipes.
+    for name in names:
+        recipe_dest = target / dest / name
+        if recipe_dest.exists() and not args.force:
+            say(f"skip   {dest}/{name} (already there; --force to overwrite)")
+            continue
+        say(f"copy   {name} -> {dest}/{name}")
+        if args.dry_run:
+            continue
+        if recipe_dest.exists():
+            shutil.rmtree(recipe_dest)
+        for relative in recipe_files(name):
+            copy_file(RECIPES_DIR / name / relative, recipe_dest / relative, dest)
+
+    # 2. Input actions and layer names the recipes need.
+    actions, layers = requirements(names)
+    cookbook_text = read_text(ROOT / "project.godot")
+    cookbook_inputs = dict(split_sections(cookbook_text)[1]).get("input", "")
+    available = section_entries(cookbook_inputs)
+    target_inputs = section_entries(dict(split_sections(project_text)[1]).get("input", ""))
+    new_actions = {a: available[a] for a in actions if a not in target_inputs and a in available}
+    for action in actions:
+        if action in target_inputs:
+            say(f"keep   input action '{action}' (already defined)")
+        elif action in available:
+            say(f"add    input action '{action}'")
+    project_text = add_entries(project_text, "input", new_actions)
+
+    target_layers = section_entries(dict(split_sections(project_text)[1]).get("layer_names", ""))
+    new_layers, notes = {}, []
+    for layer_name, number in layers.items():
+        key = f"3d_physics/layer_{number}"
+        if key not in target_layers:
+            say(f"add    physics layer {number} name '{layer_name}'")
+            new_layers[key] = f'{key}="{layer_name}"\n'
+        elif f'"{layer_name}"' not in target_layers[key]:
+            current = target_layers[key].split("=", 1)[1].strip()
+            notes.append(
+                f"Physics layer {number} is already named {current}; the recipes use it "
+                f"as '{layer_name}'. Change the layers on the copied scenes if that clashes."
+            )
+    project_text = add_entries(project_text, "layer_names", new_layers)
+
+    if not args.dry_run and project_text != read_text(project_file):
+        write_text(project_file, project_text)
+
+    # 3. What is left for a person.
+    target_version = godot_minor(project_text)
+    for name in names:
+        wanted = read_manifest(name)["godot"]
+        if wanted and target_version and tuple(map(int, wanted.split("."))) > target_version:
+            notes.append(
+                f"'{name}' was written for Godot {wanted}; this project is on "
+                f"{target_version[0]}.{target_version[1]}."
+            )
+    missing = [a for a in actions if a not in target_inputs and a not in available]
+    if missing:
+        notes.append("Define these input actions yourself: " + ", ".join(missing))
+    notes.append("Open the project in Godot once so it imports the new files.")
+    for name in args.recipes:
+        notes.append(f"Setup steps for '{name}': {dest}/{name}/README.md")
+    print("\nNext:")
+    for note in notes:
+        print(f"  - {note}")
+
+
+def copy_file(source, destination, dest):
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if source.suffix not in TEXT_SUFFIXES:
+        shutil.copyfile(source, destination)
+        return
+    text = read_text(source)
+    text = text.replace("res://recipes/", f"res://{dest}/")
+    if source.suffix == ".import":
+        # These point into the cookbook's import cache; Godot regenerates them.
+        text = re.sub(r"^(path|dest_files)=.*\n", "", text, flags=re.M)
+    write_text(destination, text)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog="tools/cookbook", description="Copy cookbook recipes into another Godot project."
+    )
+    commands = parser.add_subparsers(dest="command", required=True)
+
+    commands.add_parser("list", help="list the recipes").set_defaults(run=command_list)
+
+    info = commands.add_parser("info", help="show what a recipe needs")
+    info.add_argument("recipe")
+    info.set_defaults(run=command_info)
+
+    add = commands.add_parser("add", help="copy recipes into a project")
+    add.add_argument("recipes", nargs="+", metavar="recipe")
+    add.add_argument("--to", required=True, metavar="PROJECT", help="folder with project.godot")
+    add.add_argument(
+        "--dest",
+        default=DEFAULT_DEST,
+        help=f"folder inside the project to copy into (default: {DEFAULT_DEST})",
+    )
+    add.add_argument("--force", action="store_true", help="overwrite recipes already copied")
+    add.add_argument("--dry-run", action="store_true", help="show what would happen")
+    add.set_defaults(run=command_add)
+
+    args = parser.parse_args()
+    try:
+        args.run(args)
+    except CookbookError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

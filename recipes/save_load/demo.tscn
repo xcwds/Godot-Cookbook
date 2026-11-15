@@ -1,0 +1,98 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://recipes/save_load/demo.gd" id="script"]
+[ext_resource type="Script" path="res://recipes/save_load/demo_pickup.gd" id="pickup"]
+[ext_resource type="Script" path="res://recipes/save_load/save_transform.gd" id="save_transform"]
+[ext_resource type="PackedScene" path="res://shared/demo_level.tscn" id="level"]
+[ext_resource type="PackedScene" uid="uid://oxyumaw1iadk" path="res://recipes/third_person_movement/third_person_character.tscn" id="player"]
+[ext_resource type="PackedScene" path="res://recipes/orbit_camera/orbit_camera.tscn" id="orbit_camera"]
+[ext_resource type="PackedScene" uid="uid://cq1is8bcp5mri" path="res://recipes/pause_menu/pause_menu.tscn" id="pause_menu"]
+
+[sub_resource type="SphereShape3D" id="pickup_shape"]
+radius = 0.6
+
+[sub_resource type="BoxMesh" id="pickup_mesh"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="pickup_material"]
+albedo_color = Color(0.2, 0.8, 0.4, 1)
+
+[node name="Demo" type="Node3D"]
+script = ExtResource("script")
+
+[node name="DemoLevel" parent="." instance=ExtResource("level")]
+
+[node name="Player" parent="." instance=ExtResource("player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="SaveTransform" type="Node" parent="Player"]
+script = ExtResource("save_transform")
+
+[node name="OrbitCamera" parent="." node_paths=PackedStringArray("target") instance=ExtResource("orbit_camera")]
+target = NodePath("../Player")
+target_offset = Vector3(0, 1.2, 0)
+
+[node name="Pickups" type="Node3D" parent="."]
+
+[node name="Pickup1" type="Area3D" parent="Pickups"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -4)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("pickup")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pickups/Pickup1"]
+shape = SubResource("pickup_shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="Pickups/Pickup1"]
+mesh = SubResource("pickup_mesh")
+surface_material_override/0 = SubResource("pickup_material")
+
+[node name="Pickup2" type="Area3D" parent="Pickups"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, -6)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("pickup")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pickups/Pickup2"]
+shape = SubResource("pickup_shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="Pickups/Pickup2"]
+mesh = SubResource("pickup_mesh")
+surface_material_override/0 = SubResource("pickup_material")
+
+[node name="Pickup3" type="Area3D" parent="Pickups"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.5, -6)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("pickup")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pickups/Pickup3"]
+shape = SubResource("pickup_shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="Pickups/Pickup3"]
+mesh = SubResource("pickup_mesh")
+surface_material_override/0 = SubResource("pickup_material")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Hint" type="Label" parent="UI"]
+offset_left = 32.0
+offset_top = 32.0
+text = "Walk into the green cubes to collect them.
+F5 saves, F9 loads, F8 deletes the save. The save survives restarting the demo."
+
+[node name="Counter" type="Label" parent="UI"]
+unique_name_in_owner = true
+offset_left = 32.0
+offset_top = 96.0
+theme_override_font_sizes/font_size = 20
+
+[node name="Status" type="Label" parent="UI"]
+unique_name_in_owner = true
+offset_left = 32.0
+offset_top = 128.0
+
+[node name="PauseMenu" parent="." instance=ExtResource("pause_menu")]
