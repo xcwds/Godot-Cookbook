@@ -72,12 +72,12 @@ Because the scene is reloaded, every `_ready()` runs again: music restarts and a
 
 These cookbook recipes are saveable without depending on this one: `Inventory`, `Pickup`, `Health`, `Respawner` (its checkpoint), `FirstPersonCharacter` (where it looks) and `ThirdPersonCharacter` (which way the model faces). `MovingPlatform` and `ChaseEnemy` are not: they start over on load.
 
-Saves are plain JSON and are parsed as data only, so a save file from someone else cannot run code. They are written to a temporary file and then renamed, so a crash mid-save leaves the previous save intact.
+Saves are plain JSON and are parsed as data only, so a save file from someone else cannot run code. A damaged or hand-edited file (wrong types, missing fields, entries that are not dictionaries) is refused with an error: `load_game()` returns an `Error` and `get_save_info()` an empty dictionary. Write `load_data()` with `data.get(key, default)` so that saves from before a key existed still load. They are written to a temporary file and then renamed, so a crash or a full disk mid-save leaves the previous save intact.
 
 ## Where to take it next
 
 - Nodes created at runtime are not restored. Save a list and respawn from it in a manager's `load_data()`.
 - State outside the current scene (inventory in an autoload, settings, unlocked levels) is not covered. Add those nodes to the group only if they are inside the scene, or save them next to `nodes` in `save_game()`.
-- No migration: when you bump `VERSION`, convert older saves in `_read()`.
+- When you bump `VERSION`, convert older saves in `_migrate()`. It is called for every save older than `VERSION` and does nothing yet.
 - No autosave, no thumbnails, no list of slots. `get_save_info()` and `DirAccess.get_files_at(SaveGame.SAVE_DIR)` are the starting points.
 - Saves are readable and editable by the player. That is usually fine for single-player games.

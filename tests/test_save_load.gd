@@ -237,6 +237,24 @@ func _test_missing_and_damaged_saves() -> void:
 	_check(SaveGame.load_game(self, SLOT) != OK, "a damaged save is rejected")
 	_check(SaveGame.get_save_info(SLOT).is_empty(), "and has no info")
 
+	# Valid JSON with the wrong shape, from issue #10 and around it.
+	var damaged: Array[String] = [
+		'{"version":"2","scene":"x","saved_at":"t","nodes":{}}',
+		'{"version":1,"scene":5,"saved_at":"t","nodes":{}}',
+		'{"version":1,"scene":"%s","saved_at":"t","nodes":[1]}' % DEMO,
+		'{"version":1,"scene":"%s","saved_at":"t","nodes":{"Player":5}}' % DEMO,
+		'{"version":1.5,"scene":"%s","saved_at":"t","nodes":{}}' % DEMO,
+		'{"version":-1,"scene":"%s","saved_at":"t","nodes":{}}' % DEMO,
+		'{"version":1,"scene":"%s","nodes":{}}' % DEMO,
+		"[1, 2, 3]",
+	]
+	for text in damaged:
+		file = FileAccess.open(path, FileAccess.WRITE)
+		file.store_string(text)
+		file.close()
+		_check(SaveGame.get_save_info(SLOT).is_empty(), "no info for %s" % text)
+		_check(SaveGame.load_game(self, SLOT) != OK, "load refuses %s" % text)
+
 	file = FileAccess.open(path, FileAccess.WRITE)
 	var newer := {"version": SaveGame.VERSION + 1, "scene": DEMO, "saved_at": "", "nodes": {}}
 	file.store_string(JSON.stringify(newer))

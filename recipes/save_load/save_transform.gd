@@ -15,6 +15,9 @@ func save_data() -> Dictionary:
 
 func load_data(data: Dictionary) -> void:
 	var parent: Node3D = get_parent()
+	if not data.get("transform") is Transform3D:
+		push_warning("SaveTransform: the save has no transform for %s." % get_parent().name)
+		return
 	var transform: Transform3D = data["transform"]
 	if parent.has_method(&"teleport"):
 		# The cookbook's characters stop what they were doing and clear their

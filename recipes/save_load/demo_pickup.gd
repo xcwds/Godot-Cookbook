@@ -16,7 +16,7 @@ func save_data() -> Dictionary:
 
 
 func load_data(data: Dictionary) -> void:
-	_set_collected(data["collected"])
+	_set_collected(data.get("collected", false))
 
 
 func _set_collected(value: bool) -> void:
