@@ -15,4 +15,7 @@ func _process(_delta: float) -> void:
 		and not camera.is_position_behind(target.global_position)
 	)
 	if visible:
-		position = camera.unproject_position(target.global_position) - size / 2.0
+		# Where the target is drawn this frame, which can be between two
+		# physics positions.
+		var drawn_at := target.get_global_transform_interpolated().origin
+		position = camera.unproject_position(drawn_at) - size / 2.0

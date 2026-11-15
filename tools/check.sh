@@ -88,11 +88,15 @@ do_smoke() {
 # a script error, which would otherwise end a test function silently.
 do_test() {
 	local test log status
+	local -a extra
 	log="$(mktemp)"
 	for test in tests/test_*.gd; do
 		echo "== test: $test"
 		status=0
-		"$GODOT" --headless --path . -s "$test" >"$log" 2>&1 || status=$?
+		# A test can ask for extra Godot arguments with a line such as
+		# "## godot-args: --fixed-fps 120".
+		read -r -a extra < <(sed -n 's/^## godot-args: //p' "$test" | head -1) || true
+		"$GODOT" --headless --path . "${extra[@]}" -s "$test" >"$log" 2>&1 || status=$?
 		if [ "$status" -ne 0 ] || grep -q '^SCRIPT ERROR' "$log"; then
 			cat "$log"
 			rm -f "$log"

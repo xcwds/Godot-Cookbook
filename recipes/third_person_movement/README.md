@@ -8,6 +8,7 @@ A `CharacterBody3D` (`ThirdPersonCharacter`) that walks and runs relative to the
 2. Add the input actions listed below.
 3. Instance `third_person_character.tscn` in a level that has collision on physics layer 1.
 4. Add a camera. Movement is relative to the viewport's current camera, so any camera works; `orbit_camera` is made for this.
+5. Recommended: turn on **Physics Interpolation** in Project Settings, so the character is drawn smoothly on displays faster than the physics rate.
 
 `demo.tscn` shows it wired to `orbit_camera`, `aim_camera`, `health`, `health_bar` and `pause_menu`. The only glue is two lines in `demo.gd` that turn on `strafe` while aiming.
 

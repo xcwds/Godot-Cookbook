@@ -18,3 +18,5 @@ func load_data(data: Dictionary) -> void:
 	parent.global_transform = data["transform"]
 	if parent is CharacterBody3D:
 		parent.velocity = Vector3.ZERO
+	# A teleport, not a move: do not draw a slide between the two places.
+	parent.reset_physics_interpolation()

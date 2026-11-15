@@ -69,9 +69,8 @@ func _physics_process(delta: float) -> void:
 		_jump_buffer_left = jump_buffer_time
 	if is_on_floor():
 		_air_dash_available = true
-
-
-func _process(_delta: float) -> void:
+	# On the physics tick like all other movement, so that the engine can
+	# smooth it between ticks when physics interpolation is on.
 	if strafe:
 		model.rotation.y = get_view_yaw()
 

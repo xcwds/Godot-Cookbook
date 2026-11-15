@@ -31,6 +31,7 @@ Bindings in the cookbook project: WASD / left stick to move, mouse / arrow keys 
 | `mouse_sensitivity`, `stick_speed`, `invert_y`, `pitch_limit_degrees` | Looking. |
 | `capture_mouse` | Capture the mouse on ready. |
 | `stand_height`, `crouch_height`, `eye_offset`, `crouch_transition_speed` | Crouching. The capsule and the camera height follow these. |
+| `yaw`, `pitch`, `set_look(yaw, pitch)` | The view direction in radians, and how to set it. |
 | `is_crouching`, `is_sprinting()`, `get_target_speed()` | State, for a HUD or footsteps. |
 | `jumped`, `landed`, `crouch_changed(crouching)` | Signals. |
 | `head`, `camera` | The node that tilts and the `Camera3D`, for attaching a weapon or changing FOV. |
@@ -39,7 +40,7 @@ The input action names are constants at the top of the script.
 
 ## Scene layout
 
-`FirstPersonCharacter` (turns left and right) → `Head` (tilts up and down) → `Camera`. The collision capsule shrinks from the top when crouching, and the character stays crouched while there is no room to stand.
+`FirstPersonCharacter` → `Head` → `Camera`. `Head` holds the whole view direction and is placed by the script every frame at eye height above the body, so looking around is immediate and, with **Physics Interpolation** on in Project Settings (recommended), movement is as smooth as the display. The body turns to match the view on the physics tick. The collision capsule shrinks from the top when crouching, and the character stays crouched while there is no room to stand.
 
 ## Where to take it next
 

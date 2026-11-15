@@ -9,7 +9,7 @@ extends Node3D
 var _angle := 0.0
 
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	_angle += speed / radius * delta
 	position = Vector3(cos(_angle) * radius, position.y, sin(_angle) * radius)
 	if auto_face:

@@ -57,8 +57,7 @@ func _reset(at := Vector3(0, 0.1, 0)) -> void:
 	await _wait(0.5)
 	_character.position = at
 	_character.velocity = Vector3.ZERO
-	_character.rotation = Vector3.ZERO
-	_character.head.rotation = Vector3.ZERO
+	_character.set_look(0.0, 0.0)
 	await _wait(0.3)
 	_jumps = 0
 
@@ -90,7 +89,9 @@ func _test_looking_turns_body_and_tilts_head() -> void:
 	while _character.rotation.y < PI / 2.0:
 		await process_frame
 	Input.action_release(&"look_left")
-	_check(is_zero_approx(_character.head.rotation.y), "turning rotates the body, not the head")
+	_check(
+		is_equal_approx(_character.head.rotation.y, _character.yaw), "the head turns with the look"
+	)
 	Input.action_press(&"move_up")
 	await _wait(0.6)
 	_check(_character.position.x < -1.5, "forward follows where the body faces")

@@ -55,6 +55,8 @@ func _physics_process(delta: float) -> void:
 ## Starts the projectile at [param from], flying along its -Z axis.
 func launch(from: Transform3D) -> void:
 	global_transform = from
+	# It appears here; it did not fly here from where it last despawned.
+	reset_physics_interpolation()
 	velocity = -from.basis.z.normalized() * speed
 	_age = 0.0
 	_is_flying = true

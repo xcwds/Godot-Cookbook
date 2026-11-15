@@ -3,7 +3,8 @@ extends CharacterBody3D
 ## First-person character in one script: mouse and stick look, walking with
 ## acceleration, sprinting, crouching and jumping.
 ##
-## The body turns left and right; only the head tilts up and down.
+## The head follows the look input every frame, so looking around is as
+## smooth as the display. The body turns to match on the physics tick.
 
 signal jumped
 signal landed
@@ -58,6 +59,9 @@ const ACTION_CROUCH := &"crouch"
 @export var crouch_transition_speed := 5.0
 
 var is_crouching := false
+## Where the character is looking, in radians. Change with [method set_look].
+var yaw := 0.0
+var pitch := 0.0
 
 var _height := 0.0
 var _coyote_left := 0.0
@@ -76,6 +80,11 @@ func _ready() -> void:
 	_collision.shape = _capsule
 	_height = stand_height
 	_apply_height()
+	# The head is placed every frame instead of riding on the body, so it
+	# can follow the body's drawn position and react to the mouse at once.
+	head.top_level = true
+	head.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+	set_look(global_rotation.y, 0.0)
 	if capture_mouse:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -90,9 +99,11 @@ func _process(delta: float) -> void:
 		ACTION_LOOK_LEFT, ACTION_LOOK_RIGHT, ACTION_LOOK_UP, ACTION_LOOK_DOWN
 	)
 	_look(-stick * stick_speed * delta)
+	_update_head()
 
 
 func _physics_process(delta: float) -> void:
+	rotation.y = yaw
 	_update_crouch(delta)
 	_update_jump(delta)
 	if not is_on_floor():
@@ -124,13 +135,25 @@ func get_target_speed() -> float:
 	return sprint_speed if is_sprinting() else walk_speed
 
 
-## Turns the body by [code]amount.x[/code] and tilts the head by
+## Points the view in a direction, in radians. Pitch is clamped.
+func set_look(new_yaw: float, new_pitch: float) -> void:
+	var limit := deg_to_rad(pitch_limit_degrees)
+	yaw = wrapf(new_yaw, -PI, PI)
+	pitch = clampf(new_pitch, -limit, limit)
+	_update_head()
+
+
+## Turns the view by [code]amount.x[/code] and tilts it by
 ## [code]amount.y[/code], in radians. Positive is left and up.
 func _look(amount: Vector2) -> void:
-	rotate_y(amount.x)
-	var limit := deg_to_rad(pitch_limit_degrees)
-	var pitch := amount.y if not invert_y else -amount.y
-	head.rotation.x = clampf(head.rotation.x + pitch, -limit, limit)
+	set_look(yaw + amount.x, pitch + (amount.y if not invert_y else -amount.y))
+
+
+## Puts the head at eye height above where the body is drawn this frame.
+func _update_head() -> void:
+	var feet := get_global_transform_interpolated().origin
+	head.global_position = feet + Vector3.UP * (_height - eye_offset)
+	head.global_rotation = Vector3(pitch, yaw, 0.0)
 
 
 func _update_jump(delta: float) -> void:
@@ -165,4 +188,3 @@ func _can_stand() -> bool:
 func _apply_height() -> void:
 	_capsule.height = _height
 	_collision.position.y = _height / 2.0
-	head.position.y = _height - eye_offset

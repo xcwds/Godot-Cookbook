@@ -30,6 +30,8 @@ func _check(condition: bool, message: String) -> void:
 
 func _make_target() -> Node3D:
 	var target := Node3D.new()
+	# Moved by hand between frames here, so it is not smoothed between ticks.
+	target.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	root.add_child(target)
 	return target
 

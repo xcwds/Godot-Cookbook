@@ -56,6 +56,8 @@ var _mouse_motion := Vector2.ZERO
 
 func _ready() -> void:
 	top_level = true
+	# The rig is moved every frame, so it must not be interpolated itself.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	_spring_arm.position = shoulder_offset
 	_spring_arm.spring_length = distance
 	if target is CollisionObject3D:
@@ -89,7 +91,13 @@ func _process(delta: float) -> void:
 	if invert_y:
 		look.y = -look.y
 	set_look(yaw + look.x, pitch + look.y)
-	_follow(delta)
+	if not _follows_on_physics_tick():
+		_follow(delta)
+
+
+func _physics_process(delta: float) -> void:
+	if active and _follows_on_physics_tick():
+		_follow(delta)
 
 
 ## Makes this rig the active one: it takes the view, jumps to its target and
@@ -124,10 +132,20 @@ func get_camera() -> Camera3D:
 	return _camera
 
 
+## A physics body only moves on physics ticks. Unless the project draws it
+## at in-between positions (physics interpolation), following it every
+## frame makes it jitter against the camera on displays faster than the
+## tick rate, so the rig then follows on the tick as well.
+func _follows_on_physics_tick() -> bool:
+	return target is PhysicsBody3D and not get_tree().physics_interpolation
+
+
 func _follow(delta: float) -> void:
 	if target == null:
 		return
-	var goal := target.global_position + target_offset
+	# With physics interpolation on, this is where the target is drawn this
+	# frame; without it, it is simply where the target is.
+	var goal := target.get_global_transform_interpolated().origin + target_offset
 	if follow_speed <= 0.0 or delta <= 0.0:
 		global_position = goal
 	else:
