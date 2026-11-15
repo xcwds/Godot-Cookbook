@@ -95,6 +95,8 @@ func _test_stack_limit() -> void:
 		inventory.add(&"coin") == 0 and inventory.get_count(&"coin") == 5, "a full stack takes none"
 	)
 	_check(inventory.add(&"coin", -3) == 0, "negative amounts are ignored")
+	inventory.max_stack = 2
+	_check(inventory.add(&"coin") == 0, "nothing is added, or reported, above a lowered limit")
 	inventory.free()
 
 

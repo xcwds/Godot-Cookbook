@@ -25,7 +25,7 @@ var _continue_tick := false
 func _ready() -> void:
 	for child in get_children():
 		if child is State:
-			child.transition_requested.connect(_on_transition_requested)
+			child.transition_requested.connect(_on_transition_requested.bind(child))
 			if state == null:
 				state = child
 	if initial_state != null:
@@ -76,8 +76,12 @@ func _run(callback: Callable) -> void:
 
 
 func _on_transition_requested(
-	next_state: StringName, data: Dictionary, continue_tick: bool
+	next_state: StringName, data: Dictionary, continue_tick: bool, sender: State
 ) -> void:
+	# Only the current state may leave. A request from any other state is
+	# late, for example a timer that fired after the machine moved on.
+	if sender != state:
+		return
 	var target := get_node_or_null(NodePath(next_state)) as State
 	if target == null:
 		push_error("%s: no state named '%s'." % [get_path(), next_state])

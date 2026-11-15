@@ -42,10 +42,9 @@ func _physics_process(delta: float) -> void:
 	var collision := get_world_3d().direct_space_state.intersect_ray(query)
 	if collision.is_empty():
 		global_position = to
-		if (
-			velocity.length_squared() > 0.0001
-			and not velocity.normalized().is_equal_approx(Vector3.UP)
-		):
+		# look_at() cannot point straight up or down.
+		var is_vertical := absf(velocity.normalized().dot(Vector3.UP)) > 0.999
+		if velocity.length_squared() > 0.0001 and not is_vertical:
 			look_at(to + velocity)
 	else:
 		global_position = collision["position"]

@@ -30,6 +30,18 @@ class CookbookError(Exception):
     pass
 
 
+def read_text(path):
+    """Reads a text file as UTF-8, leaving its line endings as they are."""
+    with open(path, encoding="utf-8", newline="") as file:
+        return file.read()
+
+
+def write_text(path, text):
+    """Writes UTF-8 without translating line endings, on every platform."""
+    with open(path, "w", encoding="utf-8", newline="") as file:
+        file.write(text)
+
+
 # --- recipes -----------------------------------------------------------------
 
 
@@ -39,7 +51,7 @@ def read_manifest(name):
     if not path.is_file():
         raise CookbookError(f"no recipe named '{name}' (try: tools/cookbook list)")
     manifest = {}
-    for line in path.read_text().splitlines():
+    for line in read_text(path).splitlines():
         match = re.match(r"^(\w+)=(.*)$", line)
         if not match:
             continue
@@ -193,7 +205,7 @@ def command_add(args):
         raise CookbookError("the target is the cookbook itself")
     dest = args.dest.strip("/")
     names = with_dependencies(args.recipes)
-    project_text = project_file.read_text()
+    project_text = read_text(project_file)
     say = print if not args.dry_run else lambda text: print("(dry run) " + text)
 
     # 1. Copy the recipes.
@@ -212,7 +224,7 @@ def command_add(args):
 
     # 2. Input actions and layer names the recipes need.
     actions, layers = requirements(names)
-    cookbook_text = (ROOT / "project.godot").read_text()
+    cookbook_text = read_text(ROOT / "project.godot")
     cookbook_inputs = dict(split_sections(cookbook_text)[1]).get("input", "")
     available = section_entries(cookbook_inputs)
     target_inputs = section_entries(dict(split_sections(project_text)[1]).get("input", ""))
@@ -239,8 +251,8 @@ def command_add(args):
             )
     project_text = add_entries(project_text, "layer_names", new_layers)
 
-    if not args.dry_run and project_text != project_file.read_text():
-        project_file.write_text(project_text)
+    if not args.dry_run and project_text != read_text(project_file):
+        write_text(project_file, project_text)
 
     # 3. What is left for a person.
     target_version = godot_minor(project_text)
@@ -267,12 +279,12 @@ def copy_file(source, destination, dest):
     if source.suffix not in TEXT_SUFFIXES:
         shutil.copyfile(source, destination)
         return
-    text = source.read_text()
+    text = read_text(source)
     text = text.replace("res://recipes/", f"res://{dest}/")
     if source.suffix == ".import":
         # These point into the cookbook's import cache; Godot regenerates them.
         text = re.sub(r"^(path|dest_files)=.*\n", "", text, flags=re.M)
-    destination.write_text(text)
+    write_text(destination, text)
 
 
 def main():

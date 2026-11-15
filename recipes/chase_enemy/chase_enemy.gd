@@ -11,6 +11,9 @@ signal target_lost
 ## Start an attack from here.
 signal reached_target
 
+## A new path is requested when the destination moves further than this.
+const REPATH_DISTANCE := 0.25
+
 ## What to chase. Leave empty to chase the first node in [member target_group].
 @export var target: Node3D
 @export var target_group := &"player"
@@ -38,6 +41,8 @@ signal reached_target
 
 ## Where the enemy stands when it has nothing to chase.
 var home := Vector3.ZERO
+
+var _path_destination := Vector3.INF
 
 @onready var agent: NavigationAgent3D = $NavigationAgent3D
 @onready var state_machine: StateMachine = $StateMachine
@@ -75,7 +80,11 @@ func can_see_target(within: float) -> bool:
 ## Walks along the navigation path toward [param destination] for one
 ## physics tick. Returns true once it has arrived.
 func move_toward_point(destination: Vector3, delta: float) -> bool:
-	agent.target_position = destination
+	# Asking for a path is the expensive part, so only do it when the
+	# destination has really moved.
+	if destination.distance_to(_path_destination) > REPATH_DISTANCE:
+		_path_destination = destination
+		agent.target_position = destination
 	var arrived := agent.is_navigation_finished()
 	var direction := Vector3.ZERO
 	if not arrived:

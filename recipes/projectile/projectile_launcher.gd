@@ -25,7 +25,9 @@ func _ready() -> void:
 		pool.scene = projectile_scene
 		# Projectiles must not move with the launcher, so the pool lives
 		# beside the scene, not under this node.
-		get_tree().current_scene.add_child.call_deferred(pool)
+		var scene := get_tree().current_scene
+		var parent: Node = scene if scene != null else get_tree().root
+		parent.add_child.call_deferred(pool)
 
 
 func _physics_process(delta: float) -> void:

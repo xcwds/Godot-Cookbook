@@ -32,7 +32,9 @@ func _process(_delta: float) -> void:
 		_current = target
 		_playback.travel(target)
 
-	var horizontal := Vector3(character.velocity.x, 0.0, character.velocity.z) / character.speed
+	var horizontal := (
+		Vector3(character.velocity.x, 0.0, character.velocity.z) / maxf(character.speed, 0.001)
+	)
 	animation_tree.set("parameters/Locomotion/blend_position", minf(horizontal.length(), 1.0))
 	# Velocity relative to where the model faces: x is right, y is back.
 	var local := horizontal.rotated(Vector3.UP, -character.model.rotation.y)

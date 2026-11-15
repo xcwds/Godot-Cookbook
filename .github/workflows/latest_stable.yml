@@ -30,7 +30,9 @@ jobs:
 
       - name: Install latest Godot
         if: steps.versions.outputs.latest != steps.versions.outputs.pinned
-        run: sudo GODOT_VERSION="${{ steps.versions.outputs.latest }}" tools/install_godot.sh
+        env:
+          LATEST: ${{ steps.versions.outputs.latest }}
+        run: sudo GODOT_VERSION="$LATEST" tools/install_godot.sh
 
       - name: Install gdtoolkit
         if: steps.versions.outputs.latest != steps.versions.outputs.pinned

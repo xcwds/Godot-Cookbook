@@ -30,7 +30,7 @@ func _ready() -> void:
 ## Adds up to [param amount] of an item and returns how many fitted.
 func add(item_id: StringName, amount := 1) -> int:
 	var current := get_count(item_id)
-	var added := clampi(amount, 0, max_stack - current)
+	var added := maxi(mini(amount, max_stack - current), 0)
 	if added > 0:
 		_set_count(item_id, current + added)
 	return added

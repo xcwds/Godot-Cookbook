@@ -131,6 +131,21 @@ func _test_invulnerability_time() -> void:
 	target.free()
 	hitbox.free()
 
+	# Two once-per-visit hitboxes arrive together: the second is refused at
+	# first, and must still land once the invulnerability ends.
+	target = _make_target()
+	target.invulnerability_time = 0.3
+	var first := _make_hitbox()
+	var second := _make_hitbox()
+	await _wait(0.15)
+	_check(target.health.current_health == 9.0, "only one of two simultaneous hits lands")
+	await _wait(0.4)
+	_check(target.health.current_health == 8.0, "the refused one lands after invulnerability")
+	await _wait(0.5)
+	_check(target.health.current_health == 8.0, "and each still hits only once per visit")
+	for node: Node in [target, first, second]:
+		node.free()
+
 
 func _test_works_without_health() -> void:
 	var hurtbox: Hurtbox = HURTBOX.instantiate()

@@ -44,10 +44,13 @@ func _physics_process(delta: float) -> void:
 
 
 func _hit(hurtbox: Hurtbox) -> void:
-	_since_hit[hurtbox] = 0.0
+	# A refused hit (same team, invulnerable) is not recorded, so it is
+	# tried again next tick instead of using up this visit's hit.
 	if hurtbox.take_hit(self):
+		_since_hit[hurtbox] = 0.0
 		hit_landed.emit(hurtbox)
 
 
 func _on_area_exited(area: Area3D) -> void:
-	_since_hit.erase(area)
+	if area is Hurtbox:
+		_since_hit.erase(area)

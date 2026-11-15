@@ -26,7 +26,7 @@ static func save_game(tree: SceneTree, slot := DEFAULT_SLOT) -> Error:
 		return ERR_UNCONFIGURED
 	var nodes := {}
 	for node in tree.get_nodes_in_group(GROUP):
-		if not scene.is_ancestor_of(node):
+		if node != scene and not scene.is_ancestor_of(node):
 			continue
 		if not node.has_method(&"save_data"):
 			push_warning(

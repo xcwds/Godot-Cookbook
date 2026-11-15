@@ -30,6 +30,7 @@ func _initialize() -> void:
 	_test_hand_off_runs_new_state_in_same_tick()
 	_test_hand_off_loop_is_capped()
 	_test_unknown_state_is_ignored()
+	_test_only_the_current_state_can_transition()
 	if _failures == 0:
 		print("test_state_machine: OK")
 	quit(1 if _failures > 0 else 0)
@@ -112,4 +113,17 @@ func _test_unknown_state_is_ignored() -> void:
 	print("(an error about a missing state is expected below)")
 	machine._physics_process(0.1)
 	_check(machine.state == a, "unknown target keeps the current state")
+	machine.free()
+
+
+func _test_only_the_current_state_can_transition() -> void:
+	var machine := _make(["A", "B", "C"])
+	var a: Recorder = machine.get_node("A")
+	var b: Recorder = machine.get_node("B")
+	a.transition_to(&"B")
+	_check(machine.state == b, "the current state can leave")
+	# A is no longer current: a late request from it must not move the machine.
+	a.transition_to(&"C")
+	_check(machine.state == b, "a state that is not current cannot trigger a transition")
+	_check(b.log.back() != ["exit"], "and the current state is not exited")
 	machine.free()
