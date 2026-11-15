@@ -15,9 +15,16 @@ func save_data() -> Dictionary:
 
 func load_data(data: Dictionary) -> void:
 	var parent: Node3D = get_parent()
-	parent.global_transform = data["transform"]
-	if parent is CharacterBody3D:
-		parent.velocity = Vector3.ZERO
+	var transform: Transform3D = data["transform"]
+	if parent.has_method(&"teleport"):
+		# The cookbook's characters stop what they were doing and clear their
+		# timers. Their own load_data() restores where they look or face.
+		parent.teleport(transform)
+		parent.global_transform = transform
+	else:
+		parent.global_transform = transform
+		if parent is CharacterBody3D:
+			parent.velocity = Vector3.ZERO
 	if parent is CharacterBody3D or parent is AnimatableBody3D:
 		_place_kinematic_body_now(parent)
 	# A teleport, not a move: do not draw a slide between the two places.

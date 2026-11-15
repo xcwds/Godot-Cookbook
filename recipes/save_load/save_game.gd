@@ -98,7 +98,11 @@ static func _apply(scene: Node, save: Dictionary, slot: String) -> void:
 	# A save from an older version may predate saveable nodes added since,
 	# so only a save of this version can say that a node was gone.
 	var can_remove: bool = save["version"] == VERSION
-	for node in scene.get_tree().get_nodes_in_group(GROUP):
+	# Deepest first, as _ready() runs: a SaveTransform under a character is
+	# applied before the character, which can then restore its own facing.
+	var saveable := scene.get_tree().get_nodes_in_group(GROUP)
+	saveable.reverse()
+	for node in saveable:
 		if node != scene and not scene.is_ancestor_of(node):
 			continue
 		var key := str(scene.get_path_to(node))

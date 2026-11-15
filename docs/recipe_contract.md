@@ -50,4 +50,4 @@ A recipe with state worth keeping can take part in saving without depending on t
 - `func load_data(data: Dictionary) -> void` restores it. Use `data.get(key, default)`, so that a save from before a key existed still loads.
 - Optional `func load_missing() -> void`. Loading reloads the saved scene and removes each saveable node that has no entry in the save, because it was gone when the game was saved. By default the node is freed. A node that is part of something else (`Health`, `Inventory`, a `SaveTransform`) implements `load_missing()` to free what it belongs to.
 
-Data is applied after every node in the reloaded scene is ready and before its first physics tick, so `load_data()` can rely on `_ready()` having run. A node that is moved in `load_data()` calls `reset_physics_interpolation()` (rule 8).
+Data is applied after every node in the reloaded scene is ready and before its first physics tick, so `load_data()` can rely on `_ready()` having run. As with `_ready()`, a node's children are loaded before it, so a character can override what a `SaveTransform` under it set. A node that is moved in `load_data()` calls `reset_physics_interpolation()` (rule 8).

@@ -36,12 +36,12 @@ func _ready() -> void:
 | `current_checkpoint`, `set_checkpoint(checkpoint)` | `Respawner` | The checkpoint in use, and setting it from code. |
 | `respawn()`, `get_spawn_transform()` | `Respawner` | Move the body back, or ask where that would be. |
 | `respawned(spawn)`, `checkpoint_changed(checkpoint)` | `Respawner` | Signals. `spawn` includes the direction the spawn point faces. |
+| `respawn()` | `Respawner` | Moves the body to the spawn. A body with `teleport(transform)`, such as `ThirdPersonCharacter` and `FirstPersonCharacter`, is handed the whole transform: it stops dashing or sliding, clears its timers and faces the spawn's direction. Any other body is only moved. |
 | `inactive_color`, `active_color` | `Checkpoint` | Colours of the pad. Delete the `Pad` node to use your own visuals. |
 | `is_active`, `activated`, `deactivated` | `Checkpoint` | State and signals, for effects and sounds. |
 
 ## Where to take it next
 
 - The respawn is instant (and resets physics interpolation, so the character is not drawn sliding to the spawn). Fade out, wait, then call `respawn()`; the `scene_transition` recipe shows the fade.
-- Only position is restored. The character's facing, the camera and the rest of the level (enemies, pickups, doors) are left as they are; use `respawned` to reset them.
+- The camera and the rest of the level (enemies, pickups, doors) are left as they are; use `respawned` to reset them. With `orbit_camera`, connect `respawned` to `snap_to_target()` as `demo.gd` does, or the camera eases across the level.
 - Any checkpoint touched becomes the current one, including earlier ones. Give checkpoints an order if that matters.
-- The checkpoint is not saved between sessions. With the `save_load` recipe, save the current checkpoint's name from the respawner and look it up again on load.

@@ -34,6 +34,8 @@ func _initialize() -> void:
 	await _test_one_air_dash_per_jump()
 	await _test_wall_jump()
 	await _test_rotated_root_faces_where_it_goes()
+	await _test_teleport_stops_a_dash()
+	await _test_respawner_teleports_the_character()
 	if _failures == 0:
 		print("test_third_person_movement: OK")
 	quit(1 if _failures > 0 else 0)
@@ -248,3 +250,57 @@ func _test_rotated_root_faces_where_it_goes() -> void:
 	_character.view = null
 	view.free()
 	_character.rotation.y = 0.0
+
+
+## A respawn or load in the middle of a dash must not finish the dash from the
+## new place.
+func _test_teleport_stops_a_dash() -> void:
+	await _reset(Vector3(0, 1.2, 0))
+	await _tap(&"dash")
+	_check(_state() == &"Dash", "dashing before the teleport")
+	var spawn := Transform3D(Basis(Vector3.UP, PI / 2.0), Vector3(-10, 1.2, 10))
+	_character.teleport(spawn)
+	_check(_state() == &"Ground", "teleport returns to the initial state")
+	_check(_character.velocity == Vector3.ZERO, "and clears the velocity the dash left")
+	await _wait(0.5)
+	var moved := Vector2(
+		_character.position.x - spawn.origin.x, _character.position.z - spawn.origin.z
+	)
+	_check(moved.length() < 0.05, "the character stays at the spawn, moved %.2f" % moved.length())
+	_check(_state() == &"Ground", "standing on the ground")
+	_check(
+		_model_forward().dot(Vector3.LEFT) > 0.99,
+		"facing the way the spawn faces (-X), faces %s" % _model_forward()
+	)
+	await _tap(&"dash")
+	_check(_state() == &"Dash", "the dash cooldown was cleared")
+
+	# A jump pressed in mid-air just before the teleport is forgotten.
+	await _reset(Vector3(0, 1.2, 0))
+	await _tap(&"jump")
+	await _wait(0.4)
+	Input.action_press(&"jump")
+	await _wait(0.03)
+	_check(_state() == &"Air", "still in the air when pressing jump again")
+	_jumps = 0
+	_character.teleport(Transform3D(Basis(), Vector3(0, STANDING_Y, 0)))
+	await _wait(0.5)
+	Input.action_release(&"jump")
+	_check(_jumps == 0, "a jump buffered before the teleport is not used after it, got %d" % _jumps)
+
+
+func _test_respawner_teleports_the_character() -> void:
+	var respawner := Respawner.new()
+	_character.add_child(respawner)
+	await _reset(Vector3(3, 1.2, 3))
+	await _tap(&"dash")
+	_check(_state() == &"Dash", "dashing before the respawn")
+	respawner.respawn()
+	await _wait(0.5)
+	var start := Vector3(0, STANDING_Y, 0)
+	_check(
+		Vector2(_character.position.x, _character.position.z).length() < 0.05,
+		"a respawn mid-dash leaves the character at the spawn, at %s" % _character.position
+	)
+	_check(_state() == &"Ground", "in the ground state, got %s" % _state())
+	respawner.free()

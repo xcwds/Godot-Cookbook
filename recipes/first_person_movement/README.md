@@ -34,6 +34,7 @@ Bindings in the cookbook project: WASD / left stick to move, mouse / arrow keys 
 | `yaw`, `pitch`, `set_look(yaw, pitch)` | The view direction in radians, and how to set it. |
 | `is_crouching`, `is_sprinting()`, `get_target_speed()` | State, for a HUD or footsteps. |
 | `jumped`, `landed`, `crouch_changed(crouching)` | Signals. |
+| `teleport(transform)` | Moves the character and looks the way the transform faces, with the view level, for respawning and loading. It stops and clears buffered jumps and coyote time. The `checkpoint` and `save_load` recipes call it. |
 | `head`, `camera` | The node that tilts and the `Camera3D`, for attaching a weapon or changing FOV. |
 
 The input action names are constants at the top of the script.

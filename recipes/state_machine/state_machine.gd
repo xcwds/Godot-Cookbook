@@ -15,10 +15,11 @@ const MAX_HAND_OFFS_PER_TICK := 8
 ## Print every transition.
 @export var is_debug := false
 
-## The current state. Read-only from outside; change it with
-## [method State.transition_to].
+## The current state. Read-only; states change it with
+## [method State.transition_to], other code with [method transition_to].
 var state: State
 
+var _initial_state: State
 var _continue_tick := false
 
 
@@ -30,6 +31,7 @@ func _ready() -> void:
 				state = child
 	if initial_state != null:
 		state = initial_state
+	_initial_state = state
 	if state == null:
 		push_error("%s has no State children." % get_path())
 		set_process(false)
@@ -42,6 +44,27 @@ func _ready() -> void:
 		await owner.ready
 	state._enter(&"", {})
 	state_changed.emit(&"", state.name)
+
+
+## Switches to the child state named [param next_state] from outside the
+## machine, for example to interrupt a character for a cutscene or a respawn.
+## The current state's [method State._exit] runs first, as for any
+## transition, also when [param next_state] is the current state.
+func transition_to(next_state: StringName, data: Dictionary = {}) -> void:
+	if state == null:
+		return
+	var target := get_node_or_null(NodePath(next_state)) as State
+	if target == null:
+		push_error("%s: no state named '%s'." % [get_path(), next_state])
+		return
+	_switch(target, data, false)
+
+
+## Leaves the current state and enters the initial state again, as if the
+## machine had just started.
+func restart(data: Dictionary = {}) -> void:
+	if _initial_state != null:
+		transition_to(_initial_state.name, data)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -86,6 +109,10 @@ func _on_transition_requested(
 	if target == null:
 		push_error("%s: no state named '%s'." % [get_path(), next_state])
 		return
+	_switch(target, data, continue_tick)
+
+
+func _switch(target: State, data: Dictionary, continue_tick: bool) -> void:
 	if is_debug:
 		print("%s: %s -> %s" % [get_path(), state.name, target.name])
 

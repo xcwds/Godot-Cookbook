@@ -5,6 +5,7 @@ extends Node3D
 const SPAWN := Vector3(0, 1.1, 0)
 
 @onready var _player: ThirdPersonCharacter = $Player
+@onready var _camera: OrbitCamera = $OrbitCamera
 @onready var _player_health: Health = $Player/Health
 @onready var _dash_hitbox: Hitbox = $Player/DashHitbox
 @onready var _message: Label = %Message
@@ -23,7 +24,6 @@ func _ready() -> void:
 
 func _on_player_died() -> void:
 	_message.text = "You died. Back to the start."
-	_player.position = SPAWN
-	_player.velocity = Vector3.ZERO
-	_player.reset_physics_interpolation()
+	_player.teleport(Transform3D(Basis(), SPAWN))
+	_camera.snap_to_target()
 	_player_health.reset()

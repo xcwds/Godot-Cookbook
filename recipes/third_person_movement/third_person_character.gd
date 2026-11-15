@@ -133,6 +133,25 @@ func face(direction: Vector3, delta := -1.0) -> void:
 		set_model_yaw(lerp_angle(get_model_yaw(), target, weight))
 
 
+## Puts the character at [param to], facing the way [param to] faces, as a
+## respawn or a load does. It stops, forgets buffered jumps and the dash
+## cooldown, and starts over in its initial state, so it does not carry on
+## dashing or wall sliding from the new place. The root keeps its rotation.
+func teleport(to: Transform3D) -> void:
+	# Leave the current state first: leaving a dash sets the velocity.
+	state_machine.restart()
+	global_position = to.origin
+	velocity = Vector3.ZERO
+	_jump_buffer_left = 0.0
+	_dash_cooldown_left = 0.0
+	_air_dash_available = true
+	var forward := -to.basis.z
+	forward.y = 0.0
+	face(forward)
+	reset_physics_interpolation()
+	model.reset_physics_interpolation()
+
+
 func apply_gravity(delta: float) -> void:
 	velocity += get_gravity() * delta
 

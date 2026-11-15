@@ -193,6 +193,20 @@ func _apply_height() -> void:
 	_collision.position.y = _height / 2.0
 
 
+## Puts the character at [param to], looking the way [param to] faces with
+## the view level, as a respawn or a load does. It stops and forgets buffered
+## jumps and coyote time.
+func teleport(to: Transform3D) -> void:
+	global_position = to.origin
+	velocity = Vector3.ZERO
+	_jump_buffer_left = 0.0
+	_coyote_left = 0.0
+	set_look(to.basis.get_euler().y, 0.0)
+	rotation.y = yaw
+	reset_physics_interpolation()
+	_update_head()
+
+
 ## Saves where the character looks. [code]rotation.y[/code] follows
 ## [member yaw] every tick, so a saved transform alone cannot restore it.
 func save_data() -> Dictionary:

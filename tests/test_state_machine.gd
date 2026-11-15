@@ -31,6 +31,7 @@ func _initialize() -> void:
 	_test_hand_off_loop_is_capped()
 	_test_unknown_state_is_ignored()
 	_test_only_the_current_state_can_transition()
+	_test_outside_code_can_transition_and_restart()
 	if _failures == 0:
 		print("test_state_machine: OK")
 	quit(1 if _failures > 0 else 0)
@@ -126,4 +127,34 @@ func _test_only_the_current_state_can_transition() -> void:
 	a.transition_to(&"C")
 	_check(machine.state == b, "a state that is not current cannot trigger a transition")
 	_check(b.log.back() != ["exit"], "and the current state is not exited")
+	machine.free()
+
+
+func _test_outside_code_can_transition_and_restart() -> void:
+	var machine := _make(["A", "B"], "B")
+	var a: Recorder = machine.get_node("A")
+	var b: Recorder = machine.get_node("B")
+	var changes: Array = []
+	machine.state_changed.connect(
+		func(from: StringName, to: StringName) -> void: changes.append([from, to])
+	)
+	b.log.clear()
+	machine.transition_to(&"A", {"why": "stun"})
+	_check(machine.state == a, "transition_to switches from outside")
+	_check(b.log == [["exit"]], "the old state is exited")
+	_check(a.log == [["enter", &"B", {"why": "stun"}]], "the new state gets the data")
+	_check(changes == [[&"B", &"A"]], "state_changed is emitted")
+
+	b.log.clear()
+	machine.restart()
+	_check(machine.state == b, "restart returns to the initial state, not the first child")
+	machine.restart()
+	_check(
+		b.log == [["enter", &"A", {}], ["exit"], ["enter", &"B", {}]],
+		"restarting re-enters the current state"
+	)
+
+	print("(an error about state 'Nope' is expected below)")
+	machine.transition_to(&"Nope")
+	_check(machine.state == b, "an unknown state from outside changes nothing")
 	machine.free()

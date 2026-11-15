@@ -66,13 +66,20 @@ func get_spawn_transform() -> Transform3D:
 	return _start
 
 
+## Moves the body to the spawn transform. A body with a
+## [code]teleport(transform)[/code] method, such as the cookbook's characters,
+## is handed the whole transform so it can stop what it was doing and face the
+## spawn's direction. Any other body is only moved.
 func respawn() -> void:
 	var spawn := get_spawn_transform()
-	body.global_position = spawn.origin
-	if body is CharacterBody3D:
-		body.velocity = Vector3.ZERO
-	# A teleport, not a move: do not draw a slide between the two places.
-	body.reset_physics_interpolation()
+	if body.has_method(&"teleport"):
+		body.teleport(spawn)
+	else:
+		body.global_position = spawn.origin
+		if body is CharacterBody3D:
+			body.velocity = Vector3.ZERO
+		# A teleport, not a move: do not draw a slide between the two places.
+		body.reset_physics_interpolation()
 	respawned.emit(spawn)
 
 
