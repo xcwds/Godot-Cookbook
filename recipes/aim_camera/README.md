@@ -15,7 +15,7 @@ An over-the-shoulder camera (`AimCamera`) that takes over from an orbit camera w
 ```gdscript
 func _process(_delta: float) -> void:
 	if aim_camera.is_aiming():
-		model.rotation.y = aim_camera.yaw
+		model.global_rotation.y = aim_camera.yaw
 ```
 
 If you only want a permanent over-the-shoulder view, you do not need this recipe: use `orbit_camera` with a `shoulder_offset` and a short `distance`.
