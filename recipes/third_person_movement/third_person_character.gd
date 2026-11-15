@@ -61,6 +61,12 @@ var _air_dash_available := true
 @onready var state_machine: StateMachine = $StateMachine
 
 
+func _ready() -> void:
+	# Lets the save_load recipe pick this up, if it is in the project. See
+	# "Saveable nodes" in docs/recipe_contract.md.
+	add_to_group(&"saveable")
+
+
 func _physics_process(delta: float) -> void:
 	# Runs before the state machine, which is a child of this node.
 	_jump_buffer_left = maxf(_jump_buffer_left - delta, 0.0)
@@ -171,3 +177,14 @@ func restore_air_dash() -> void:
 ## True when touching a wall while falling, with wall sliding enabled.
 func can_wall_slide() -> bool:
 	return wall_slide_enabled and is_on_wall_only() and velocity.y <= 0.0
+
+
+## Saves which way the model faces. The root does not turn, so a saved
+## transform alone does not restore it.
+func save_data() -> Dictionary:
+	return {"model_yaw": get_model_yaw()}
+
+
+func load_data(data: Dictionary) -> void:
+	set_model_yaw(data.get("model_yaw", get_model_yaw()))
+	model.reset_physics_interpolation()

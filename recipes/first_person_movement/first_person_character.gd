@@ -85,6 +85,9 @@ func _ready() -> void:
 	head.top_level = true
 	head.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	set_look(global_rotation.y, 0.0)
+	# Lets the save_load recipe pick this up, if it is in the project. See
+	# "Saveable nodes" in docs/recipe_contract.md.
+	add_to_group(&"saveable")
 	if capture_mouse:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -188,3 +191,15 @@ func _can_stand() -> bool:
 func _apply_height() -> void:
 	_capsule.height = _height
 	_collision.position.y = _height / 2.0
+
+
+## Saves where the character looks. [code]rotation.y[/code] follows
+## [member yaw] every tick, so a saved transform alone cannot restore it.
+func save_data() -> Dictionary:
+	return {"yaw": yaw, "pitch": pitch}
+
+
+func load_data(data: Dictionary) -> void:
+	set_look(data.get("yaw", yaw), data.get("pitch", pitch))
+	rotation.y = yaw
+	reset_physics_interpolation()

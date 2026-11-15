@@ -16,6 +16,19 @@ signal collected(by: Node3D)
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	# Lets the save_load recipe pick this up, if it is in the project. See
+	# "Saveable nodes" in docs/recipe_contract.md.
+	add_to_group(&"saveable")
+
+
+## A pickup saves only that it is still there. One that was collected before
+## the save has no entry, so a load removes it.
+func save_data() -> Dictionary:
+	return {}
+
+
+func load_data(_data: Dictionary) -> void:
+	pass
 
 
 func _physics_process(delta: float) -> void:

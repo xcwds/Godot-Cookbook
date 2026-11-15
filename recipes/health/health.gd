@@ -24,6 +24,9 @@ var current_health := 0.0
 
 func _ready() -> void:
 	reset()
+	# Lets the save_load recipe pick this up, if it is in the project. See
+	# "Saveable nodes" in docs/recipe_contract.md.
+	add_to_group(&"saveable")
 
 
 func is_dead() -> bool:
@@ -58,3 +61,18 @@ func heal(amount: float) -> float:
 func reset() -> void:
 	current_health = max_health
 	changed.emit(current_health, max_health)
+
+
+func save_data() -> Dictionary:
+	return {"current": current_health, "max": max_health}
+
+
+func load_data(data: Dictionary) -> void:
+	max_health = data.get("max", max_health)
+	current_health = clampf(data.get("current", max_health), 0.0, max_health)
+	changed.emit(current_health, max_health)
+
+
+## What this belonged to was gone when the game was saved.
+func load_missing() -> void:
+	get_parent().queue_free()

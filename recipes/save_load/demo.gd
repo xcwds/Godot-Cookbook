@@ -12,6 +12,8 @@ func _ready() -> void:
 		pickup.collected.connect(_update_counter)
 	_update_counter()
 	_show_save_info()
+	# A load replaces this scene, so the new copy of it reports the result.
+	SaveGame.events.loaded.connect(func(_slot: String) -> void: _status.text = "Loaded.")
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -22,8 +24,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			var error := SaveGame.save_game(get_tree(), SLOT)
 			_status.text = "Saved." if error == OK else "Save failed: %s" % error_string(error)
 		KEY_F9:
-			var error := await SaveGame.load_game(get_tree(), SLOT)
-			_status.text = "Loaded." if error == OK else "Nothing to load."
+			if SaveGame.load_game(get_tree(), SLOT) != OK:
+				_status.text = "Nothing to load."
 		KEY_F8:
 			SaveGame.delete_save(SLOT)
 			_status.text = "Save deleted."

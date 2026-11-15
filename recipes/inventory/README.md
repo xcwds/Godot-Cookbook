@@ -48,7 +48,7 @@ A pickup that does not fit under `max_stack` stays where it is.
 
 ## Saving
 
-`Inventory` has `save_data()` and `load_data()` and joins the `saveable` group, so the `save_load` recipe saves it with no extra code. Collected pickups are freed, so on their own they come back after a load; save which ones were taken, or hide them instead of freeing, as that recipe's README describes.
+`Inventory` and `Pickup` join the `saveable` group, so the `save_load` recipe saves them with no extra code. A pickup collected before the save has no entry in it, so loading removes it again, and coins cannot be duplicated or lost through a save and load.
 
 ## Where to take it next
 

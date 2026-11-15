@@ -18,5 +18,23 @@ func load_data(data: Dictionary) -> void:
 	parent.global_transform = data["transform"]
 	if parent is CharacterBody3D:
 		parent.velocity = Vector3.ZERO
+	if parent is CharacterBody3D or parent is AnimatableBody3D:
+		_place_kinematic_body_now(parent)
 	# A teleport, not a move: do not draw a slide between the two places.
 	parent.reset_physics_interpolation()
+
+
+## The parent was gone when the game was saved.
+func load_missing() -> void:
+	get_parent().queue_free()
+
+
+## The physics server moves a kinematic body to a new transform only during
+## its next step, so for that one step areas still see it where the scene put
+## it, and a pickup or checkpoint at the level's start would fire on load.
+## Switching the body to static for a moment moves it at once.
+func _place_kinematic_body_now(body: PhysicsBody3D) -> void:
+	var rid := body.get_rid()
+	PhysicsServer3D.body_set_mode(rid, PhysicsServer3D.BODY_MODE_STATIC)
+	PhysicsServer3D.body_set_state(rid, PhysicsServer3D.BODY_STATE_TRANSFORM, body.global_transform)
+	PhysicsServer3D.body_set_mode(rid, PhysicsServer3D.BODY_MODE_KINEMATIC)

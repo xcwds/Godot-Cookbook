@@ -38,6 +38,9 @@ func _ready() -> void:
 		body = get_parent() as Node3D
 	_start = body.global_transform
 	add_to_group(GROUP)
+	# Lets the save_load recipe pick this up, if it is in the project. See
+	# "Saveable nodes" in docs/recipe_contract.md.
+	add_to_group(&"saveable")
 
 
 func _physics_process(_delta: float) -> void:
@@ -71,3 +74,21 @@ func respawn() -> void:
 	# A teleport, not a move: do not draw a slide between the two places.
 	body.reset_physics_interpolation()
 	respawned.emit(spawn)
+
+
+## Saves the current checkpoint. The body's position is not saved here; give
+## the body a SaveTransform for that.
+func save_data() -> Dictionary:
+	if not is_instance_valid(current_checkpoint):
+		return {"checkpoint": ""}
+	return {"checkpoint": str(get_path_to(current_checkpoint))}
+
+
+func load_data(data: Dictionary) -> void:
+	var path: String = data.get("checkpoint", "")
+	set_checkpoint(get_node_or_null(path) as Checkpoint if path != "" else null)
+
+
+## The body was gone when the game was saved.
+func load_missing() -> void:
+	body.queue_free()
