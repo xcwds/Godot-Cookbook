@@ -27,6 +27,6 @@ Input action: `pause` (or whatever you set `pause_action` to). See `recipe.cfg`.
 ## Where to take it next
 
 - Restart reloads the current scene and Quit closes the game with no confirmation. Most games want "back to main menu" (the `scene_transition` recipe can do the switch) and an "are you sure?".
-- No settings screen. A settings recipe is on the roadmap; a button here would open it.
+- No settings screen. Add a button that shows the `settings_menu` recipe.
 - The menu uses the default theme. Give `Panel` a theme, or replace the layout under `Center`.
 - Anything else that opens over the game (inventory, dialogue) will fight over pause and mouse mode. At that point move both into one small manager.

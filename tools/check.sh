@@ -84,13 +84,22 @@ do_smoke() {
 	return "$missing"
 }
 
-# Tests print expected engine errors, so only the exit code counts here.
+# Tests print expected engine errors, so a test fails on its exit code or on
+# a script error, which would otherwise end a test function silently.
 do_test() {
-	local test
+	local test log status
+	log="$(mktemp)"
 	for test in tests/test_*.gd; do
 		echo "== test: $test"
-		"$GODOT" --headless --path . -s "$test"
+		status=0
+		"$GODOT" --headless --path . -s "$test" >"$log" 2>&1 || status=$?
+		if [ "$status" -ne 0 ] || grep -q '^SCRIPT ERROR' "$log"; then
+			cat "$log"
+			rm -f "$log"
+			return 1
+		fi
 	done
+	rm -f "$log"
 }
 
 # Copies each recipe, alone, into an empty project. A recipe that needs

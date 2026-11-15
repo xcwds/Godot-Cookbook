@@ -1,0 +1,46 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://recipes/settings_menu/demo.gd" id="script"]
+[ext_resource type="PackedScene" path="res://recipes/settings_menu/settings_menu.tscn" id="settings_menu"]
+
+[sub_resource type="AudioStreamGenerator" id="tone"]
+buffer_length = 0.5
+
+[node name="Demo" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("script")
+
+[node name="TonePlayer" type="AudioStreamPlayer" parent="."]
+stream = SubResource("tone")
+bus = &"SFX"
+
+[node name="SettingsMenu" parent="." instance=ExtResource("settings_menu")]
+layout_mode = 1
+
+[node name="Side" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 32.0
+offset_right = 292.0
+offset_bottom = 160.0
+theme_override_constants/separation = 8
+
+[node name="Hint" type="Label" parent="Side"]
+layout_mode = 2
+text = "Changes are saved as you make them
+and are still there next time."
+
+[node name="TestSound" type="Button" parent="Side"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Play a test sound (SFX bus)"
+
+[node name="Status" type="Label" parent="Side"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Rebind Jump, then press it."

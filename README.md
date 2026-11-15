@@ -16,6 +16,7 @@ Starter recipes for 3D game development in Godot 4. Each recipe is a small folde
 | [checkpoint](recipes/checkpoint/) | Checkpoints and respawning at the last one reached. |
 | [health_bar](recipes/health_bar/) | 2D bar that follows a health node, and a billboarded 3D version. |
 | [scene_transition](recipes/scene_transition/) | Fade between scenes with background loading and a progress bar. |
+| [settings_menu](recipes/settings_menu/) | Volume, fullscreen, v-sync and key rebinding, saved between sessions. |
 | [save_load](recipes/save_load/) | Save the current scene's state to a file and restore it. |
 | [pause_menu](recipes/pause_menu/) | Pause, resume, restart and quit. |
 
