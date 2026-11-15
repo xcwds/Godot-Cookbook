@@ -1,0 +1,92 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://recipes/chase_enemy/demo.gd" id="script"]
+[ext_resource type="PackedScene" path="res://shared/demo_level.tscn" id="level"]
+[ext_resource type="PackedScene" uid="uid://oxyumaw1iadk" path="res://recipes/third_person_movement/third_person_character.tscn" id="player"]
+[ext_resource type="PackedScene" path="res://recipes/orbit_camera/orbit_camera.tscn" id="orbit_camera"]
+[ext_resource type="PackedScene" uid="uid://cq1is8bcp5mri" path="res://recipes/pause_menu/pause_menu.tscn" id="pause_menu"]
+[ext_resource type="Script" path="res://recipes/health/health.gd" id="health"]
+[ext_resource type="PackedScene" uid="uid://cq0bb4yx3m4ay" path="res://recipes/health_bar/health_bar_3d.tscn" id="health_bar"]
+[ext_resource type="PackedScene" path="res://recipes/hitbox/hitbox.tscn" id="hitbox"]
+[ext_resource type="PackedScene" path="res://recipes/hitbox/hurtbox.tscn" id="hurtbox"]
+[ext_resource type="PackedScene" path="res://recipes/chase_enemy/chase_enemy.tscn" id="enemy"]
+
+[sub_resource type="NavigationMesh" id="navigation_mesh"]
+geometry_parsed_geometry_type = 1
+agent_height = 1.75
+agent_radius = 0.5
+
+[sub_resource type="SphereShape3D" id="touch_shape"]
+radius = 0.9
+
+[node name="Demo" type="Node3D"]
+script = ExtResource("script")
+
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("navigation_mesh")
+
+[node name="DemoLevel" parent="NavigationRegion3D" instance=ExtResource("level")]
+
+[node name="Player" parent="." groups=["player"] instance=ExtResource("player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="Health" type="Node" parent="Player"]
+script = ExtResource("health")
+max_health = 5.0
+
+[node name="HealthBar3d" parent="Player" node_paths=PackedStringArray("health") instance=ExtResource("health_bar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+health = NodePath("../Health")
+
+[node name="Hurtbox" parent="Player" node_paths=PackedStringArray("health") instance=ExtResource("hurtbox")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
+health = NodePath("../Health")
+team = &"player"
+
+[node name="OrbitCamera" parent="." node_paths=PackedStringArray("target") instance=ExtResource("orbit_camera")]
+target = NodePath("../Player")
+target_offset = Vector3(0, 1.2, 0)
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Enemy1" parent="Enemies" instance=ExtResource("enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.1, -12)
+
+[node name="Hitbox" parent="Enemies/Enemy1" instance=ExtResource("hitbox")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+team = &"enemy"
+hit_interval = 1.0
+
+[node name="CollisionShape3D" parent="Enemies/Enemy1/Hitbox" index="0"]
+shape = SubResource("touch_shape")
+
+[node name="Enemy2" parent="Enemies" instance=ExtResource("enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.1, -14)
+
+[node name="Hitbox" parent="Enemies/Enemy2" instance=ExtResource("hitbox")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+team = &"enemy"
+hit_interval = 1.0
+
+[node name="CollisionShape3D" parent="Enemies/Enemy2/Hitbox" index="0"]
+shape = SubResource("touch_shape")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Hint" type="Label" parent="UI"]
+offset_left = 32.0
+offset_top = 32.0
+text = "The red enemies notice you within 10 m if they can see you.
+Break line of sight behind a pillar, or get 15 m away, and they go home.
+Being touched hurts."
+
+[node name="Status" type="Label" parent="UI"]
+unique_name_in_owner = true
+offset_left = 32.0
+offset_top = 112.0
+theme_override_font_sizes/font_size = 20
+
+[node name="PauseMenu" parent="." instance=ExtResource("pause_menu")]
+
+[editable path="Enemies/Enemy1/Hitbox"]
+[editable path="Enemies/Enemy2/Hitbox"]

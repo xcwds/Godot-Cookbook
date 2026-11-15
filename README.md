@@ -11,6 +11,7 @@ Starter recipes for 3D game development in Godot 4. Each recipe is a small folde
 | [first_person_movement](recipes/first_person_movement/) | First-person character: look, walk, sprint, crouch and jump. |
 | [orbit_camera](recipes/orbit_camera/) | Third-person camera that follows, orbits, zooms and avoids walls. |
 | [aim_camera](recipes/aim_camera/) | Over-the-shoulder camera that takes over while aiming. |
+| [chase_enemy](recipes/chase_enemy/) | Enemy that chases a target along the navigation mesh. |
 | [interaction](recipes/interaction/) | Walk up to something, see a prompt, press a button. |
 | [health](recipes/health/) | Hit points as a node, with damage, heal and signals. |
 | [hitbox](recipes/hitbox/) | Areas that deal damage and areas that take it. |
