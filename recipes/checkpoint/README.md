@@ -41,7 +41,7 @@ func _ready() -> void:
 
 ## Where to take it next
 
-- The respawn is instant. Fade out, wait, then call `respawn()`; the `scene_transition` recipe shows the fade.
+- The respawn is instant (and resets physics interpolation, so the character is not drawn sliding to the spawn). Fade out, wait, then call `respawn()`; the `scene_transition` recipe shows the fade.
 - Only position is restored. The character's facing, the camera and the rest of the level (enemies, pickups, doors) are left as they are; use `respawned` to reset them.
 - Any checkpoint touched becomes the current one, including earlier ones. Give checkpoints an order if that matters.
 - The checkpoint is not saved between sessions. With the `save_load` recipe, save the current checkpoint's name from the respawner and look it up again on load.

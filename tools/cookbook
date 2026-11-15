@@ -64,6 +64,7 @@ def read_manifest(name):
     manifest.setdefault("depends", [])
     manifest.setdefault("input_actions", [])
     manifest.setdefault("physics_layers_3d", {})
+    manifest.setdefault("project_settings", {})
     manifest.setdefault("godot", "")
     return manifest
 
@@ -180,6 +181,9 @@ def command_info(args):
     print(f"  Input actions:   {', '.join(actions) or 'none'}")
     layer_text = ", ".join(f"{number} ({name})" for name, number in layers.items())
     print(f"  Physics layers:  {layer_text or 'none'}")
+    settings = recommended_settings(everything)
+    setting_text = ", ".join(f"{key}={format_setting(value)}" for key, value in settings.items())
+    print(f"  Recommended:     {setting_text or 'no project settings'}")
     print(f"  Files:           {len(recipe_files(args.recipe))}, see recipes/{args.recipe}/")
     print(f"  Read more:       recipes/{args.recipe}/README.md")
 
@@ -194,6 +198,26 @@ def requirements(names):
                 actions.append(action)
         layers.update(manifest["physics_layers_3d"])
     return actions, layers
+
+
+def recommended_settings(names):
+    """Project settings the recipes work best with. They are never changed."""
+    settings = {}
+    for name in names:
+        settings.update(read_manifest(name)["project_settings"])
+    return settings
+
+
+def format_setting(value):
+    """A value as project.godot writes it."""
+    return json.dumps(value)
+
+
+def has_setting(project_text, key, value):
+    """True if project.godot already sets section/key to the value."""
+    section, _, name = key.partition("/")
+    entries = section_entries(dict(split_sections(project_text)[1]).get(section, ""))
+    return entries.get(name, "").strip() == f"{name}={format_setting(value)}"
 
 
 def command_add(args):
@@ -262,6 +286,13 @@ def command_add(args):
             notes.append(
                 f"'{name}' was written for Godot {wanted}; this project is on "
                 f"{target_version[0]}.{target_version[1]}."
+            )
+    for key, value in recommended_settings(names).items():
+        if not has_setting(project_text, key, value):
+            notes.append(
+                f"Recommended project setting: {key} = {format_setting(value)} "
+                "(Project Settings, with Advanced Settings on). It is not changed for you; "
+                "the recipe READMEs say what it is for."
             )
     missing = [a for a in actions if a not in target_inputs and a not in available]
     if missing:

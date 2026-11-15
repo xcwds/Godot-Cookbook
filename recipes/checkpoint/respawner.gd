@@ -68,4 +68,6 @@ func respawn() -> void:
 	body.global_position = spawn.origin
 	if body is CharacterBody3D:
 		body.velocity = Vector3.ZERO
+	# A teleport, not a move: do not draw a slide between the two places.
+	body.reset_physics_interpolation()
 	respawned.emit(spawn)

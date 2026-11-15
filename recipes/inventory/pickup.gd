@@ -18,7 +18,7 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	rotate_y(TAU * spin_speed * delta)
 
 

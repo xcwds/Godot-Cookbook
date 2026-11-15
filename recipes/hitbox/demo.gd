@@ -25,4 +25,5 @@ func _on_player_died() -> void:
 	_message.text = "You died. Back to the start."
 	_player.position = SPAWN
 	_player.velocity = Vector3.ZERO
+	_player.reset_physics_interpolation()
 	_player_health.reset()
