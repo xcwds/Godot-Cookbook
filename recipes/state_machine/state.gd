@@ -11,11 +11,18 @@ signal transition_requested(next_state: StringName, data: Dictionary, continue_t
 ## Called when the machine switches to this state. [param previous_state] is
 ## the name of the state being left, or empty for the initial state.
 ## [param data] is whatever the previous state passed along.
+## [br][br]
+## It may call [method transition_to] or [method hand_off_to], for a state
+## that only decides where to go. The request waits until this transition has
+## finished and [signal StateMachine.state_changed] has been emitted for it,
+## and is then applied.
 func _enter(_previous_state: StringName, _data: Dictionary) -> void:
 	pass
 
 
-## Called when the machine switches away from this state.
+## Called when the machine switches away from this state. The machine is
+## already on its way to another state, so a transition requested here is
+## refused with an error.
 func _exit() -> void:
 	pass
 

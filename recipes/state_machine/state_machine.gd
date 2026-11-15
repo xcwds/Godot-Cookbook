@@ -21,6 +21,12 @@ var state: State
 
 var _initial_state: State
 var _continue_tick := false
+## True from the start of a transition until state_changed has been emitted.
+var _is_switching := false
+## True while the old state's _exit() runs.
+var _is_exiting := false
+## Requests made while a transition was running, applied once it is done.
+var _queued: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -42,8 +48,11 @@ func _ready() -> void:
 	# Let the scene finish setting up first, so states can use their owner.
 	if owner != null and not owner.is_node_ready():
 		await owner.ready
+	_is_switching = true
 	state._enter(&"", {})
 	state_changed.emit(&"", state.name)
+	_is_switching = false
+	_apply_queued()
 
 
 ## Switches to the child state named [param next_state] from outside the
@@ -53,11 +62,7 @@ func _ready() -> void:
 func transition_to(next_state: StringName, data: Dictionary = {}) -> void:
 	if state == null:
 		return
-	var target := get_node_or_null(NodePath(next_state)) as State
-	if target == null:
-		push_error("%s: no state named '%s'." % [get_path(), next_state])
-		return
-	_switch(target, data, false)
+	_request(next_state, data, false)
 
 
 ## Leaves the current state and enters the initial state again, as if the
@@ -105,20 +110,62 @@ func _on_transition_requested(
 	# late, for example a timer that fired after the machine moved on.
 	if sender != state:
 		return
+	_request(next_state, data, continue_tick)
+
+
+## Transitions do not nest. A request made while one runs, from the new
+## state's _enter() or from a state_changed listener, waits until it has
+## finished and is then applied in order. A request from _exit() is refused:
+## the machine is already on its way somewhere.
+func _request(next_state: StringName, data: Dictionary, continue_tick: bool) -> void:
 	var target := get_node_or_null(NodePath(next_state)) as State
 	if target == null:
 		push_error("%s: no state named '%s'." % [get_path(), next_state])
 		return
+	if _is_exiting:
+		push_error(
+			(
+				"%s: transition to '%s' requested while leaving %s; _exit() cannot transition."
+				% [get_path(), next_state, state.name]
+			)
+		)
+		return
+	if _is_switching:
+		_queued.append({"target": target, "data": data, "continue_tick": continue_tick})
+		return
 	_switch(target, data, continue_tick)
+	_apply_queued()
 
 
 func _switch(target: State, data: Dictionary, continue_tick: bool) -> void:
+	var previous_name := state.name
+	var target_name := target.name
 	if is_debug:
-		print("%s: %s -> %s" % [get_path(), state.name, target.name])
+		print("%s: %s -> %s" % [get_path(), previous_name, target_name])
 
-	var previous := state
-	previous._exit()
+	_is_switching = true
+	_is_exiting = true
+	state._exit()
+	_is_exiting = false
 	state = target
-	state._enter(previous.name, data)
+	state._enter(previous_name, data)
 	_continue_tick = continue_tick
-	state_changed.emit(previous.name, state.name)
+	state_changed.emit(previous_name, target_name)
+	_is_switching = false
+
+
+func _apply_queued() -> void:
+	var applied := 0
+	while not _queued.is_empty():
+		if applied == MAX_HAND_OFFS_PER_TICK:
+			push_error(
+				(
+					"%s: more than %d transitions requested from _enter() in a row, last state %s."
+					% [get_path(), MAX_HAND_OFFS_PER_TICK, state.name]
+				)
+			)
+			_queued.clear()
+			return
+		var next: Dictionary = _queued.pop_front()
+		_switch(next["target"], next["data"], next["continue_tick"])
+		applied += 1
