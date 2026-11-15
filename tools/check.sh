@@ -138,6 +138,41 @@ do_cli() {
 		PROJECT="$project" run_godot -s "$PWD/tools/load_all.gd" -- addons/cookbook
 	done
 	rm -rf "$work"
+	do_cli_crlf
+}
+
+# A project.godot with CRLF endings (a Windows checkout) must be parsed like an
+# LF one: existing actions are kept, no section is duplicated, it stays CRLF.
+do_cli_crlf() {
+	echo "== cli: CRLF project.godot"
+	local work project file
+	work="$(mktemp -d)"
+	project="$work/crlf"
+	file="$project/project.godot"
+	mkdir -p "$project"
+	printf 'config_version=5\r\n\r\n[application]\r\n\r\nconfig/name="X"\r\n\r\n[input]\r\n\r\njump={\r\n"deadzone": 0.5,\r\n"events": []\r\n}\r\n' >"$file"
+	local fail="" output
+	output="$(tools/cookbook add third_person_movement --to "$project")"
+	grep -q "keep   input action 'jump'" <<<"$output" ||
+		fail="the existing 'jump' action was not recognised"
+	[ "$(grep -c '^\[input\]' "$file")" -eq 1 ] || fail="${fail:-[input] was duplicated}"
+	[ "$(grep -c '^jump=' "$file")" -eq 1 ] || fail="${fail:-'jump' was defined twice}"
+	grep -q '^move_left=' "$file" || fail="${fail:-the missing actions were not added}"
+	grep -q '^\[layer_names\]' "$file" || fail="${fail:-[layer_names] was not added}"
+	# Every line break must still be CRLF.
+	if tr -d '\r' <"$file" | cmp -s - "$file" || grep -q $'[^\r]$' "$file"; then
+		fail="${fail:-the file no longer uses CRLF throughout}"
+	fi
+	cp "$file" "$work/before.godot"
+	tools/cookbook add third_person_movement --to "$project" >/dev/null
+	cmp -s "$file" "$work/before.godot" || fail="${fail:-adding twice changed project.godot}"
+	if [ -n "$fail" ]; then
+		echo "$fail" >&2
+		cat -A "$file" >&2
+		rm -rf "$work"
+		return 1
+	fi
+	rm -rf "$work"
 }
 
 do_lint() {

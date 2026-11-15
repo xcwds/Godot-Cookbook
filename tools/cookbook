@@ -42,6 +42,22 @@ def write_text(path, text):
         file.write(text)
 
 
+def line_ending(text):
+    """The line ending a file uses, judged by its first line break."""
+    match = re.search(r"\r?\n", text)
+    return match.group(0) if match else "\n"
+
+
+def to_lf(text):
+    """The text with CRLF line endings turned into LF, for parsing."""
+    return text.replace("\r\n", "\n")
+
+
+def from_lf(text, ending):
+    """LF text converted back to the given line ending."""
+    return text if ending == "\n" else text.replace("\n", ending)
+
+
 # --- recipes -----------------------------------------------------------------
 
 
@@ -104,7 +120,10 @@ def recipe_files(name):
 
 
 def split_sections(text):
-    """Splits project.godot into (header, [(section_name, body), ...])."""
+    """Splits project.godot into (header, [(section_name, body), ...]).
+
+    Expects LF line endings; convert with to_lf() first.
+    """
     parts = re.split(r"^\[([^\]\n]+)\]\n", text, flags=re.M)
     sections = [(parts[i], parts[i + 1]) for i in range(1, len(parts), 2)]
     return parts[0], sections
@@ -229,7 +248,11 @@ def command_add(args):
         raise CookbookError("the target is the cookbook itself")
     dest = args.dest.strip("/")
     names = with_dependencies(args.recipes)
-    project_text = read_text(project_file)
+    # project.godot is parsed and edited with LF endings and written back with
+    # the ending it had, so a CRLF file (a Windows checkout) stays CRLF.
+    original_text = read_text(project_file)
+    ending = line_ending(original_text)
+    project_text = to_lf(original_text)
     say = print if not args.dry_run else lambda text: print("(dry run) " + text)
 
     # 1. Copy the recipes.
@@ -248,7 +271,7 @@ def command_add(args):
 
     # 2. Input actions and layer names the recipes need.
     actions, layers = requirements(names)
-    cookbook_text = read_text(ROOT / "project.godot")
+    cookbook_text = to_lf(read_text(ROOT / "project.godot"))
     cookbook_inputs = dict(split_sections(cookbook_text)[1]).get("input", "")
     available = section_entries(cookbook_inputs)
     target_inputs = section_entries(dict(split_sections(project_text)[1]).get("input", ""))
@@ -275,8 +298,8 @@ def command_add(args):
             )
     project_text = add_entries(project_text, "layer_names", new_layers)
 
-    if not args.dry_run and project_text != read_text(project_file):
-        write_text(project_file, project_text)
+    if not args.dry_run and project_text != to_lf(original_text):
+        write_text(project_file, from_lf(project_text, ending))
 
     # 3. What is left for a person.
     target_version = godot_minor(project_text)
