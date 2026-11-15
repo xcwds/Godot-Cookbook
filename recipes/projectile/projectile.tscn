@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://recipes/projectile/projectile.gd" id="script"]
+
+[sub_resource type="StandardMaterial3D" id="material"]
+albedo_color = Color(1, 0.85, 0.3, 1)
+emission_enabled = true
+emission = Color(1, 0.7, 0.2, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="SphereMesh" id="mesh"]
+material = SubResource("material")
+radius = 0.1
+height = 0.2
+
+[node name="Projectile" type="Node3D"]
+script = ExtResource("script")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("mesh")

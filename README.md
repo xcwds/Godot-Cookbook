@@ -15,6 +15,7 @@ Starter recipes for 3D game development in Godot 4. Each recipe is a small folde
 | [chase_enemy](recipes/chase_enemy/) | Enemy that chases a target along the navigation mesh. |
 | [interaction](recipes/interaction/) | Walk up to something, see a prompt, press a button. |
 | [health](recipes/health/) | Hit points as a node, with damage, heal and signals. |
+| [projectile](recipes/projectile/) | Projectiles, a launcher and a reusable object pool. |
 | [hitbox](recipes/hitbox/) | Areas that deal damage and areas that take it. |
 | [checkpoint](recipes/checkpoint/) | Checkpoints and respawning at the last one reached. |
 | [health_bar](recipes/health_bar/) | 2D bar that follows a health node, and a billboarded 3D version. |
