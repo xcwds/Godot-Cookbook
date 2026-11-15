@@ -40,3 +40,14 @@ An optional `project_settings={"physics/common/physics_interpolation": true}` un
 2. Add any new input actions to `project.godot` and list them in `recipe.cfg`.
 3. If the recipe has logic worth pinning down, add a `tests/test_<name>.gd` (see `tests/test_state_machine.gd`). A test that needs extra Godot arguments declares them in a `## godot-args: ...` comment line.
 4. Run `tools/check.sh`. It imports the project, runs the browser and every demo headless, runs the tests, adds each recipe on its own to an empty project to prove it is copyable, and lints.
+
+## Saveable nodes
+
+A recipe with state worth keeping can take part in saving without depending on the `save_load` recipe. The convention is duck-typed, so it costs nothing in a project without `save_load`:
+
+- Join the group by its literal name in `_ready()`: `add_to_group(&"saveable")`. Do not use `SaveGame.GROUP`, which would add a dependency.
+- `func save_data() -> Dictionary` returns the node's state. Values are numbers, strings, booleans, arrays, dictionaries and engine types such as `Vector3`; never nodes or resources, so store a path relative to the node instead.
+- `func load_data(data: Dictionary) -> void` restores it. Use `data.get(key, default)`, so that a save from before a key existed still loads.
+- Optional `func load_missing() -> void`. Loading reloads the saved scene and removes each saveable node that has no entry in the save, because it was gone when the game was saved. By default the node is freed. A node that is part of something else (`Health`, `Inventory`, a `SaveTransform`) implements `load_missing()` to free what it belongs to.
+
+Data is applied after every node in the reloaded scene is ready and before its first physics tick, so `load_data()` can rely on `_ready()` having run. A node that is moved in `load_data()` calls `reset_physics_interpolation()` (rule 8).

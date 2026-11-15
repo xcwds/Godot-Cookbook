@@ -1,0 +1,48 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://shared/demo_level.tscn" id="level"]
+[ext_resource type="PackedScene" path="res://recipes/third_person_movement/third_person_character.tscn" id="player"]
+[ext_resource type="Script" path="res://recipes/save_load/save_transform.gd" id="save_transform"]
+[ext_resource type="Script" path="res://recipes/inventory/inventory.gd" id="inventory"]
+[ext_resource type="Script" path="res://recipes/health/health.gd" id="health"]
+[ext_resource type="Script" path="res://recipes/checkpoint/respawner.gd" id="respawner"]
+[ext_resource type="PackedScene" path="res://recipes/inventory/pickup.tscn" id="pickup"]
+[ext_resource type="PackedScene" path="res://recipes/checkpoint/checkpoint.tscn" id="checkpoint"]
+[ext_resource type="Script" path="res://tests/save_load_probe.gd" id="probe"]
+
+[node name="SaveLoadFixture" type="Node3D"]
+
+[node name="DemoLevel" parent="." instance=ExtResource("level")]
+
+[node name="Player" parent="." instance=ExtResource("player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="SaveTransform" type="Node" parent="Player"]
+script = ExtResource("save_transform")
+
+[node name="Inventory" type="Node" parent="Player"]
+script = ExtResource("inventory")
+
+[node name="Health" type="Node" parent="Player"]
+script = ExtResource("health")
+
+[node name="Respawner" type="Node" parent="Player"]
+script = ExtResource("respawner")
+
+[node name="Pickups" type="Node3D" parent="."]
+
+[node name="AtStart" parent="Pickups" instance=ExtResource("pickup")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Far" parent="Pickups" instance=ExtResource("pickup")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.5, 0)
+
+[node name="Checkpoints" type="Node3D" parent="."]
+
+[node name="AtStart" parent="Checkpoints" instance=ExtResource("checkpoint")]
+
+[node name="Far" parent="Checkpoints" instance=ExtResource("checkpoint")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 0)
+
+[node name="Probe" type="Node" parent="."]
+script = ExtResource("probe")

@@ -23,7 +23,8 @@ static func find_in(node: Node) -> Inventory:
 
 
 func _ready() -> void:
-	# Lets the save_load recipe pick this up, if it is in the project.
+	# Lets the save_load recipe pick this up, if it is in the project. See
+	# "Saveable nodes" in docs/recipe_contract.md.
 	add_to_group(&"saveable")
 
 
@@ -75,6 +76,11 @@ func load_data(data: Dictionary) -> void:
 	var items: Dictionary = data.get("items", {})
 	for item_id: String in items:
 		_set_count(StringName(item_id), int(items[item_id]))
+
+
+## What carried this was gone when the game was saved.
+func load_missing() -> void:
+	get_parent().queue_free()
 
 
 func _set_count(item_id: StringName, count: int) -> void:

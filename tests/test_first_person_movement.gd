@@ -35,6 +35,7 @@ func _initialize() -> void:
 	await _test_holding_jump_jumps_once()
 	await _test_crouch()
 	await _test_cannot_stand_under_the_beam()
+	await _test_look_direction_is_saveable()
 	if _failures == 0:
 		print("test_first_person_movement: OK")
 	quit(1 if _failures > 0 else 0)
@@ -165,3 +166,19 @@ func _test_cannot_stand_under_the_beam() -> void:
 	await _wait(0.4)
 	_check(_character.position.z < -8.9, "walks out the far side")
 	_check(not _character.is_crouching, "and stands up once clear")
+
+
+func _test_look_direction_is_saveable() -> void:
+	_check(_character.is_in_group(&"saveable"), "the character joins the saveable group")
+	_character.set_look(1.0, 0.3)
+	# Through JSON as the save_load recipe stores it.
+	var stored: Variant = JSON.to_native(
+		JSON.parse_string(JSON.stringify(JSON.from_native(_character.save_data())))
+	)
+	_character.set_look(0.0, 0.0)
+	await physics_frame
+	_character.load_data(stored)
+	await physics_frame
+	_check(is_equal_approx(_character.yaw, 1.0), "saved yaw is restored")
+	_check(is_equal_approx(_character.pitch, 0.3), "saved pitch is restored")
+	_check(is_equal_approx(_character.rotation.y, 1.0), "and the body turns to it")

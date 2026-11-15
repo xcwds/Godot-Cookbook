@@ -10,13 +10,26 @@ extends RefCounted
 ## [/codeblock]
 ## The dictionary can hold numbers, strings, arrays, dictionaries and engine
 ## types such as Vector3 and Color. It cannot hold nodes or resources.
+##
+## Loading always reloads the saved scene and then applies the data, so
+## anything that is not saved is as the scene starts. A saveable node that
+## has no entry in the save was gone when it was saved, and is removed: its
+## optional [code]load_missing()[/code] is called, or else it is freed.
 
 const GROUP := &"saveable"
 const SAVE_DIR := "user://saves"
 ## Bump when the shape of the save data changes, and convert old saves in
-## [method _read].
+## [method _read]. Bump it too when a game update adds saveable nodes to a
+## scene: nodes missing from an older save are kept rather than removed.
 const VERSION := 1
 const DEFAULT_SLOT := "slot_1"
+
+## Signals about loads. They outlive the scene that asked for the load,
+## which is replaced by it:
+## [codeblock]
+## SaveGame.events.loaded.connect(func(slot: String) -> void: print("loaded ", slot))
+## [/codeblock]
+static var events := Events.new()
 
 
 ## Writes the state of every saveable node in the current scene to a slot.
@@ -54,32 +67,50 @@ static func save_game(tree: SceneTree, slot := DEFAULT_SLOT) -> Error:
 	return DirAccess.rename_absolute(path + ".tmp", path)
 
 
-## Restores a slot. Changes to the saved scene first if it is not the
-## current one, so this must be awaited:
-## [codeblock]
-## var error := await SaveGame.load_game(get_tree())
-## [/codeblock]
+## Restores a slot by reloading the saved scene, also when it is the
+## current one, and then applying the data. Returns an error straight away if
+## the slot cannot be read. On [constant OK] the current scene is replaced at
+## the end of this frame and [signal Events.loaded] is emitted once the data
+## is applied, so code after the call in the replaced scene does not see the
+## result; connect to [member events] for that.
 static func load_game(tree: SceneTree, slot := DEFAULT_SLOT) -> Error:
 	var save := _read(slot)
 	if save.is_empty():
 		return ERR_FILE_CANT_READ
-
 	var scene_path: String = save["scene"]
-	if tree.current_scene == null or tree.current_scene.scene_file_path != scene_path:
-		var error := tree.change_scene_to_file(scene_path)
-		if error != OK:
-			return error
-		# The new scene is added at the end of the frame; let it get ready.
-		await tree.process_frame
-		await tree.process_frame
+	if not ResourceLoader.exists(scene_path, "PackedScene"):
+		push_error("SaveGame: the saved scene %s does not exist." % scene_path)
+		return ERR_FILE_NOT_FOUND
+	var packed: PackedScene = load(scene_path)
+	var scene := packed.instantiate() if packed != null else null
+	if scene == null:
+		return ERR_CANT_CREATE
 
-	var scene := tree.current_scene
+	# The scene's ready signal comes after every node in it is ready and
+	# before its first physics tick, so nothing at the start position can
+	# fire before the saved positions are in place.
+	scene.ready.connect(_apply.bind(scene, save, slot), CONNECT_ONE_SHOT)
+	return tree.change_scene_to_node(scene)
+
+
+static func _apply(scene: Node, save: Dictionary, slot: String) -> void:
 	var nodes: Dictionary = JSON.to_native(save["nodes"])
-	for node in tree.get_nodes_in_group(GROUP):
+	# A save from an older version may predate saveable nodes added since,
+	# so only a save of this version can say that a node was gone.
+	var can_remove: bool = save["version"] == VERSION
+	for node in scene.get_tree().get_nodes_in_group(GROUP):
+		if node != scene and not scene.is_ancestor_of(node):
+			continue
 		var key := str(scene.get_path_to(node))
-		if nodes.has(key) and node.has_method(&"load_data"):
-			node.load_data(nodes[key])
-	return OK
+		if nodes.has(key):
+			if node.has_method(&"load_data"):
+				node.load_data(nodes[key])
+		elif can_remove:
+			if node.has_method(&"load_missing"):
+				node.load_missing()
+			else:
+				node.queue_free()
+	events.loaded.emit(slot)
 
 
 static func has_save(slot := DEFAULT_SLOT) -> bool:
@@ -123,3 +154,11 @@ static func _read(slot: String) -> Dictionary:
 		push_error("SaveGame: %s was made by a newer version of the game." % path)
 		return {}
 	return save
+
+
+## Holds the signals of [member SaveGame.events].
+class Events:
+	extends RefCounted
+
+	## Emitted after a load has replaced the scene and applied the saved data.
+	signal loaded(slot: String)
