@@ -38,6 +38,8 @@ There are two ways to switch:
 - `transition_to(name, data)`: the new state gets its first callback on the next frame or tick. Use it when this state has already done the work for this frame.
 - `hand_off_to(name, data)`: the new state also runs the callback that is executing now, so no frame is lost. Use it at the top of a callback when this state should not handle the frame, and `return` straight after.
 
+Transitions do not nest. One requested in `_enter()`, or from a `state_changed` listener, waits until the current transition has finished and its `state_changed` has been emitted, so listeners always see `A -> B` before `B -> C`. One requested in `_exit()` is refused with an error, because the machine is already on its way somewhere else.
+
 Code outside the machine, such as a respawn, a cutscene or a stun, calls `StateMachine.transition_to(name, data)` or `restart()` instead. The current state's `_exit()` runs first, also when switching to the state it is already in.
 
 If the machine has an `owner`, it enters the first state after the owner is ready, so states can use the owner's `@onready` variables in `_enter`.
