@@ -38,6 +38,7 @@ var direction := Vector3(input.x, 0.0, input.y).rotated(Vector3.UP, camera.yaw)
 | `distance`, `zoom_min`, `zoom_max`, `zoom_step` | Camera distance and mouse wheel zoom; `zoom_step = 0` disables zoom. |
 | `yaw`, `pitch`, `set_look(yaw, pitch)` | Current direction in radians, and how to set it. |
 | `get_camera()` | The `Camera3D`, for FOV and other camera settings. |
+| `snap_to_target()` | Jumps to the target instead of easing there. Call it after teleporting the target. The rig also snaps on its first follow after `activate()`, so a target placed by a save load does not glide. |
 
 ## Smooth following
 

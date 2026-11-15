@@ -17,6 +17,7 @@ func _initialize() -> void:
 	_test_zoom_is_clamped()
 	_test_inactive_rig_does_nothing()
 	_test_aim_takes_over_and_hands_back()
+	_test_snaps_after_a_teleport()
 	if _failures == 0:
 		print("test_cameras: OK")
 	quit(1 if _failures > 0 else 0)
@@ -155,3 +156,24 @@ func _test_aim_takes_over_and_hands_back() -> void:
 	)
 	_check(events == ["started", "ended"], "signals are emitted once each")
 	target.free()
+
+
+func _test_snaps_after_a_teleport() -> void:
+	var target := _make_target()
+	var rig := _make_orbit(target)
+	rig._process(0.016)
+	target.position = Vector3(40, 0, 0)
+	rig._process(0.016)
+	_check(rig.global_position.x < 40.0, "the rig eases toward a target that jumped")
+	rig.snap_to_target()
+	_check(rig.global_position.is_equal_approx(Vector3(40, 1.2, 0)), "snap_to_target jumps to it")
+	target.free()
+
+	# A target placed after activate(), as a save load does, is snapped to on
+	# the first follow instead of eased toward.
+	var late_target := _make_target()
+	var late := _make_orbit(late_target)
+	late_target.position = Vector3(-30, 0, 0)
+	late._process(0.016)
+	_check(late.global_position.is_equal_approx(Vector3(-30, 1.2, 0)), "first follow snaps")
+	late_target.free()

@@ -36,6 +36,7 @@ func _initialize() -> void:
 	await _test_crouch()
 	await _test_cannot_stand_under_the_beam()
 	await _test_look_direction_is_saveable()
+	await _test_teleport()
 	if _failures == 0:
 		print("test_first_person_movement: OK")
 	quit(1 if _failures > 0 else 0)
@@ -182,3 +183,18 @@ func _test_look_direction_is_saveable() -> void:
 	_check(is_equal_approx(_character.yaw, 1.0), "saved yaw is restored")
 	_check(is_equal_approx(_character.pitch, 0.3), "saved pitch is restored")
 	_check(is_equal_approx(_character.rotation.y, 1.0), "and the body turns to it")
+
+
+func _test_teleport() -> void:
+	_character.set_look(0.0, 0.5)
+	_character.velocity = Vector3(5, 3, 5)
+	var spawn := Transform3D(
+		Basis(Vector3.UP, PI / 2.0), _character.global_position + Vector3(2, 0, 0)
+	)
+	_character.teleport(spawn)
+	_check(_character.velocity == Vector3.ZERO, "teleport stops the character")
+	_check(_character.global_position.is_equal_approx(spawn.origin), "and moves it")
+	_check(is_equal_approx(_character.yaw, PI / 2.0), "looking the way the spawn faces")
+	_check(is_zero_approx(_character.pitch), "with the view level")
+	await physics_frame
+	_check(is_equal_approx(_character.rotation.y, PI / 2.0), "the body turns with it")

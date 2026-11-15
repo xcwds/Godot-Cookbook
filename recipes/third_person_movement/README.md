@@ -33,6 +33,7 @@ Bindings in the cookbook project: WASD / left stick to move, Space / A to jump, 
 | `dash_enabled`, `dash_speed`, `dash_distance`, `dash_cooldown` | Dash. One dash per jump while airborne. |
 | `wall_slide_enabled`, `wall_slide_speed`, `wall_jump_push`, `wall_jump_control_lock` | Wall slide and wall jump. |
 | `jumped`, `landed`, `dashed` | Signals, for sounds and effects. |
+| `teleport(transform)` | Moves the character and faces it the way the transform faces, for respawning and loading. It stops, clears buffered jumps and the dash cooldown, and returns to the `Ground` state, so it never finishes a dash or wall slide from the new place. The `checkpoint` and `save_load` recipes call it. Snap the camera afterwards. |
 
 The input action names are constants at the top of `third_person_character.gd`.
 

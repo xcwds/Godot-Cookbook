@@ -48,6 +48,7 @@ var yaw := 0.0
 var pitch := 0.0
 
 var _mouse_motion := Vector2.ZERO
+var _snap_on_next_follow := false
 
 @onready var _pitch_pivot: Node3D = $Pitch
 @onready var _spring_arm: SpringArm3D = $Pitch/SpringArm
@@ -106,7 +107,16 @@ func activate() -> void:
 	active = true
 	_mouse_motion = Vector2.ZERO
 	_follow(0.0)
+	# Snap once more on the first follow, in case the target is placed after
+	# this, as when a save is loaded into a freshly started scene.
+	_snap_on_next_follow = true
 	_camera.make_current()
+
+
+## Jumps to the target instead of easing toward it. Call it after teleporting
+## the target, for example from [signal Respawner.respawned].
+func snap_to_target() -> void:
+	_follow(0.0)
 
 
 ## Stops this rig reading input and following. Activate another camera to
@@ -146,6 +156,9 @@ func _follow(delta: float) -> void:
 	# With physics interpolation on, this is where the target is drawn this
 	# frame; without it, it is simply where the target is.
 	var goal := target.get_global_transform_interpolated().origin + target_offset
+	if _snap_on_next_follow:
+		_snap_on_next_follow = false
+		delta = 0.0
 	if follow_speed <= 0.0 or delta <= 0.0:
 		global_position = goal
 	else:

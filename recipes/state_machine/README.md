@@ -38,6 +38,8 @@ There are two ways to switch:
 - `transition_to(name, data)`: the new state gets its first callback on the next frame or tick. Use it when this state has already done the work for this frame.
 - `hand_off_to(name, data)`: the new state also runs the callback that is executing now, so no frame is lost. Use it at the top of a callback when this state should not handle the frame, and `return` straight after.
 
+Code outside the machine, such as a respawn, a cutscene or a stun, calls `StateMachine.transition_to(name, data)` or `restart()` instead. The current state's `_exit()` runs first, also when switching to the state it is already in.
+
 If the machine has an `owner`, it enters the first state after the owner is ready, so states can use the owner's `@onready` variables in `_enter`.
 
 ## Requirements
@@ -51,6 +53,8 @@ None. See `recipe.cfg`.
 | `initial_state` | State to start in. Defaults to the first child state. |
 | `is_debug` | Print every transition. |
 | `state` | The current state. |
+| `transition_to(name, data)` | Switches state from outside the machine. |
+| `restart(data)` | Leaves the current state and enters the initial state again. |
 | `state_changed(previous_state, new_state)` | Signal emitted after every transition. |
 
 ## Where to take it next
