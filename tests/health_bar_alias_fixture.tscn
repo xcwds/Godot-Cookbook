@@ -1,0 +1,17 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://recipes/health/health.gd" id="health"]
+[ext_resource type="PackedScene" path="res://recipes/health_bar/health_bar_2d.tscn" id="bar_2d"]
+[ext_resource type="PackedScene" path="res://recipes/health_bar/health_bar_3d.tscn" id="bar_3d"]
+
+[node name="Fixture" type="Node3D"]
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("health")
+max_health = 3.0
+
+[node name="Bar2d" parent="." node_paths=PackedStringArray("health") instance=ExtResource("bar_2d")]
+health = NodePath("../Health")
+
+[node name="Bar3d" parent="." node_paths=PackedStringArray("health") instance=ExtResource("bar_3d")]
+health = NodePath("../Health")

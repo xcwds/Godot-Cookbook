@@ -1,24 +1,26 @@
 # Health bar
 
-A 2D bar (`HealthBar2D`) that follows a `Health` node and turns yellow, then red, as it drains, and a 3D version (`HealthBar3D`) that renders the 2D bar through a `SubViewport` onto a billboarded `Sprite3D`.
+A 2D bar (`HealthBar2D`) that follows a `Health` node, or any other `Meter` such as stamina, and turns yellow, then red, as it drains, and a 3D version (`HealthBar3D`) that renders the 2D bar through a `SubViewport` onto a billboarded `Sprite3D`.
 
 ## Add it to your project
 
-1. Copy this folder (without `demo.tscn` and `demo.gd`) and the `health` recipe into your project.
+1. Copy this folder (without `demo.tscn` and `demo.gd`) and the `meter` recipe into your project. `Health` from the `health` recipe is a `Meter`.
 2. For a HUD, instance `health_bar_2d.tscn` in your UI. Above a character, instance `health_bar_3d.tscn` as a child of the character.
-3. Set the bar's `health` property to the `Health` node it should show. That is all; the bar connects itself.
+3. Set the bar's `meter` property to the `Health` node, or other `Meter`, it should show. That is all; the bar connects itself.
 
-To drive a bar from something other than a `Health` node, leave `health` empty and call `set_values(current, maximum)`.
+To drive a bar from something that is not a `Meter`, leave `meter` empty and call `set_values(current, maximum)`.
+
+The property used to be called `health`. That name still works in scenes and code, so nothing saved before the rename breaks; the editor writes `meter` the next time it saves such a scene.
 
 ## Requirements
 
-Recipe: `health`. See `recipe.cfg`.
+Recipe: `meter`. See `recipe.cfg`.
 
 ## Settings
 
 | Property | On | Purpose |
 |---|---|---|
-| `health` | both | The `Health` node to follow. |
+| `meter` | both | The `Meter` to follow, for example a `Health` node. |
 | `low_threshold`, `mid_threshold` | `HealthBar2D` | Fractions of the maximum where the colour changes. |
 | `low_color`, `mid_color`, `high_color` | `HealthBar2D` | Bar colours. |
 
