@@ -46,7 +46,15 @@ tools/cookbook info third_person_movement
 tools/cookbook add third_person_movement --to ~/games/my_game
 ```
 
+```bash
+tools/cookbook status --to ~/games/my_game
+```
+
 `add` copies the recipe and the recipes it depends on into `addons/cookbook/` in your project (change with `--dest`), leaves the demos behind, and adds the input actions and physics layer names they need to your `project.godot` without touching ones you already have. It then lists what is left to do by hand; the recipe's README has the scene setup. `--dry-run` shows what would happen. It needs Python 3.
+
+The recipes register global classes with short names such as `State`, `Health` and `Inventory` (`tools/cookbook info <recipe>` lists them). If a script in your project already uses one of those names, `add` stops and names both files, because Godot allows one script per `class_name`. Rename yours, or pass `--force` to copy anyway.
+
+Each copied folder gets a `.cookbook` file that records the cookbook commit and date it came from. `status` lists the copies in a project and says which are behind the cookbook and which you have edited. To update a copy, run `add` again with `--force`; it replaces the folder, and refuses if you have edited the copy unless you add `--discard-edits`.
 
 Copying a recipe folder by hand works too: take the recipes it depends on, skip the `demo*` files, and replace `res://recipes/` in the copied scenes and resources (`.tscn`, `.tres`) with the new location. Scripts contain no such paths, so they need no change, and a recipe folder can be moved later.
 

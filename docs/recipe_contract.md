@@ -10,7 +10,7 @@ A recipe is a folder under `recipes/` that someone can copy into their own proje
 4. **A `demo.tscn`** that runs by itself and shows the recipe working. The recipe browser lists every recipe that has one.
 5. **A `recipe.cfg`** manifest (see below).
 6. **A `README.md`** following [recipe_template.md](recipe_template.md).
-7. **Naming and style.** `snake_case` folders, scenes and scripts; code follows the [style guide](style_guide.md).
+7. **Naming and style.** `snake_case` folders, scenes and scripts; code follows the [style guide](style_guide.md). Global class names are a namespace shared with the project a recipe is copied into: `tools/cookbook add` stops when that project already has a script with the same `class_name`, so pick names a typical game is unlikely to use for something else.
 8. **Move on the physics tick, teleport explicitly.** The project has physics interpolation on, so anything visible that moves does so in `_physics_process` and is drawn smoothly in between. Code that places a node somewhere new (respawn, load, reuse from a pool) calls `reset_physics_interpolation()` afterwards. Cameras and other nodes that must follow input every frame turn interpolation off for themselves and read `get_global_transform_interpolated()` from what they follow.
 9. **CC0 assets only**, each listed in `CREDITS.md`. The check fails for an asset file that is not.
 

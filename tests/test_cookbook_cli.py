@@ -9,6 +9,7 @@ and do not depend on the real ones. `tools/check.sh cli` covers the real
 recipes, with Godot.
 """
 
+import json
 import shutil
 import subprocess
 import sys
@@ -75,6 +76,8 @@ func _process(_delta: float) -> void:
 \t\tpass
 """
 
+BASE_SCRIPT = "class_name Base\nextends Node\n"
+
 EMPTY_PROJECT = 'config_version=5\n\n[application]\n\nconfig/name="Game"\n'
 
 
@@ -114,7 +117,7 @@ class FixtureCase(unittest.TestCase):
 
         base = self.cookbook / "recipes" / "base"
         write(base / "recipe.cfg", BASE_CFG)
-        write(base / "base.gd", "extends Node\n")
+        write(base / "base.gd", BASE_SCRIPT)
         write(
             base / "base.tscn",
             '[gd_scene format=3]\n\n[ext_resource type="Script" path="res://recipes/base/base.gd" id="1"]\n',
@@ -279,13 +282,54 @@ class AddTest(FixtureCase):
         write(copied / "stale.gd", "# left over\n")
         self.add("mover")
         self.assertEqual(read(copied / "mover.gd"), "# edited\n")
-        self.add("mover", "--force")
+        self.add("mover", "--force", "--discard-edits")
         self.assertEqual(read(copied / "mover.gd"), MOVER_SCRIPT)
         self.assertFalse((copied / "stale.gd").exists())
+
+    def test_force_says_what_it_deletes(self):
+        self.add("base")
+        output = self.add("base", "--force").stdout
+        self.assertIn("delete addons/cookbook/base (6 files, to replace it)", output)
+        self.assertLess(output.index("delete addons"), output.index("copy   base"))
+
+    def test_force_refuses_to_delete_edits(self):
+        self.add("mover")
+        copied = self.target / "addons" / "cookbook" / "mover"
+        write(copied / "mover.gd", "# edited\n")
+        write(copied / "mine.gd", "# added\n")
+        (copied / "README.md").unlink()
+        before = snapshot(self.target)
+        result = self.add("mover", "--force", expect=1)
+        self.assertIn("error: addons/cookbook/mover has been edited since it was copied", result.stderr)
+        for line in ("changed  mover.gd", "added    mine.gd", "deleted  README.md"):
+            self.assertIn(line, result.stderr)
+        self.assertIn("--discard-edits", result.stderr)
+        # Nothing was replaced, not even the dependency that had no edits.
+        self.assertEqual(snapshot(self.target), before)
+
+    def test_files_godot_generates_are_not_edits(self):
+        self.add("base")
+        copied = self.target / "addons" / "cookbook" / "base"
+        write(copied / "icon.png.import", "[remap]\n\npath=\"res://.godot/imported/x.ctex\"\n")
+        write(copied / "base.gd.uid", "uid://abc\n")
+        self.add("base", "--force")
+
+    def test_force_replaces_a_copy_without_a_stamp(self):
+        self.add("base")
+        copied = self.target / "addons" / "cookbook" / "base"
+        (copied / ".cookbook").unlink()
+        write(copied / "base.gd", "# edited, but nothing records it\n")
+        self.add("base", "--force")
+        self.assertEqual(read(copied / "base.gd"), BASE_SCRIPT)
+        self.assertTrue((copied / ".cookbook").is_file())
 
     def test_dry_run_writes_nothing(self):
         before = snapshot(self.target)
         output = self.add("mover", "--dry-run").stdout
+        self.assertEqual(snapshot(self.target), before)
+        self.add("mover")
+        before = snapshot(self.target)
+        self.assertIn("(dry run) delete", self.add("mover", "--dry-run", "--force").stdout)
         self.assertEqual(snapshot(self.target), before)
         self.assertIn("(dry run) copy   mover -> addons/cookbook/mover", output)
         self.assertIn("(dry run) add    input action 'jump'", output)
@@ -324,6 +368,160 @@ class AddTest(FixtureCase):
         output = self.add("mover").stdout
         self.assertIn("Define these input actions yourself: warp", output)
         self.assertNotIn("warp", self.project())
+
+
+class ClassNameClashTest(FixtureCase):
+    def setUp(self):
+        super().setUp()
+        write(self.target / "scripts" / "my_base.gd", "extends Node\nclass_name Base\n")
+        self.clash = (
+            "Base: scripts/my_base.gd in the project, recipes/base/base.gd in the cookbook"
+        )
+
+    def test_a_clash_stops_the_copy_and_names_both_files(self):
+        before = snapshot(self.target)
+        result = self.add("base", expect=1)
+        self.assertIn("error: the project already defines class names", result.stderr)
+        self.assertIn(self.clash, result.stderr)
+        self.assertIn("--force", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertEqual(snapshot(self.target), before)
+
+    def test_a_clash_in_a_dependency_stops_the_copy(self):
+        before = snapshot(self.target)
+        result = self.add("mover", expect=1)
+        self.assertIn(self.clash, result.stderr)
+        self.assertEqual(snapshot(self.target), before)
+
+    def test_dry_run_reports_the_clash(self):
+        self.assertIn(self.clash, self.add("base", "--dry-run", expect=1).stderr)
+
+    def test_force_copies_and_repeats_the_clash(self):
+        output = self.add("base", "--force").stdout
+        self.assertTrue((self.target / "addons" / "cookbook" / "base" / "base.gd").is_file())
+        self.assertIn("Class name clash, copied because of --force: " + self.clash, output)
+
+    def test_other_class_names_and_commented_lines_do_not_clash(self):
+        write(
+            self.target / "scripts" / "my_base.gd",
+            "# class_name Base\nclass_name BaseCamp\nextends Node\n",
+        )
+        self.add("base")
+
+    def test_a_recipe_that_is_skipped_is_not_checked(self):
+        (self.target / "scripts" / "my_base.gd").unlink()
+        self.add("base")
+        write(self.target / "scripts" / "my_base.gd", "class_name Base\n")
+        self.assertIn("skip   addons/cookbook/base", self.add("base").stdout)
+
+    def test_the_copy_being_replaced_does_not_clash_with_itself(self):
+        (self.target / "scripts" / "my_base.gd").unlink()
+        self.add("base")
+        self.add("base", "--force")
+
+    def test_a_copy_moved_elsewhere_clashes(self):
+        (self.target / "scripts" / "my_base.gd").unlink()
+        self.add("base")
+        shutil.move(self.target / "addons" / "cookbook" / "base", self.target / "game_base")
+        result = self.add("base", expect=1)
+        self.assertIn("Base: game_base/base.gd in the project", result.stderr)
+
+    def test_info_lists_class_names(self):
+        self.assertRegex(self.cli("info", "base").stdout, r"Class names:\s+Base\n")
+        self.assertRegex(self.cli("info", "mover").stdout, r"Class names:\s+none\n")
+
+
+class ProvenanceTest(FixtureCase):
+    def stamp(self, name="base"):
+        return json.loads(read(self.target / "addons" / "cookbook" / name / ".cookbook"))
+
+    def status(self):
+        return self.cli("status", "--to", self.target).stdout
+
+    def git(self, *arguments):
+        subprocess.run(
+            ["git", "-C", str(self.cookbook), "-c", "user.name=Test", "-c", "user.email=t@example.com",
+             "-c", "commit.gpgsign=false", *arguments],
+            check=True,
+            capture_output=True,
+        )
+
+    def test_each_copied_recipe_gets_a_stamp(self):
+        self.add("mover")
+        for name in ("base", "mover"):
+            stamp = self.stamp(name)
+            self.assertEqual(stamp["recipe"], name)
+            self.assertRegex(stamp["date"], r"^\d{4}-\d{2}-\d{2}$")
+            self.assertNotIn(".cookbook", stamp["files"])
+        self.assertEqual(sorted(self.stamp("mover")["files"]), ["README.md", "mover.gd", "recipe.cfg"])
+        # The fixture cookbook is not a git repository.
+        self.assertEqual(self.stamp()["commit"], "unknown")
+
+    @unittest.skipUnless(shutil.which("git"), "needs git")
+    def test_the_stamp_records_the_cookbook_commit(self):
+        self.git("init", "-q")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "fixture")
+        commit = subprocess.run(
+            ["git", "-C", str(self.cookbook), "rev-parse", "HEAD"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+        self.add("mover")
+        self.assertEqual(self.stamp("base")["commit"], commit)
+        self.assertIn(f"from cookbook commit {commit[:10]}\n", self.status())
+        # Uncommitted changes to a recipe are marked, for that recipe only.
+        write(self.cookbook / "recipes" / "base" / "base.gd", BASE_SCRIPT + "# wip\n")
+        self.add("mover", "--force")
+        self.assertEqual(self.stamp("base")["commit"], commit + "-modified")
+        self.assertEqual(self.stamp("mover")["commit"], commit)
+
+    def test_status_without_copies(self):
+        self.assertIn("No recipes copied by tools/cookbook were found", self.status())
+
+    def test_status_of_fresh_copies(self):
+        self.add("mover")
+        output = self.status()
+        self.assertRegex(output, r"addons/cookbook/base: base, copied \d{4}-\d\d-\d\d from")
+        self.assertIn("addons/cookbook/mover: mover, copied", output)
+        self.assertEqual(output.count("same as the cookbook's version"), 2)
+        self.assertEqual(output.count("not edited here"), 2)
+
+    def test_status_shows_edits_and_ignores_generated_files(self):
+        self.add("mover")
+        copied = self.target / "addons" / "cookbook"
+        write(copied / "mover" / "mover.gd", "# edited\n")
+        write(copied / "base" / "base.gd.uid", "uid://abc\n")
+        write(copied / "base" / "icon.png.import", "[remap]\n")
+        output = self.status()
+        base, mover = output.split("addons/cookbook/mover:")
+        self.assertIn("not edited here", base)
+        self.assertIn("edited here:\n    changed  mover.gd\n", mover)
+
+    def test_status_shows_when_the_cookbook_has_moved_on(self):
+        self.add("mover")
+        write(self.cookbook / "recipes" / "base" / "base.gd", BASE_SCRIPT + "# fixed a bug\n")
+        # A change to a demo is not a change to what was copied.
+        write(self.cookbook / "recipes" / "mover" / "demo.tscn", "[gd_scene format=3]\n")
+        base, mover = self.status().split("addons/cookbook/mover:")
+        self.assertIn("behind: the cookbook's version has changed since", base)
+        self.assertIn("same as the cookbook's version", mover)
+        self.add("base", "--force")
+        self.assertNotIn("behind", self.status())
+
+    def test_status_finds_a_moved_copy_and_survives_a_bad_stamp(self):
+        self.add("mover")
+        copied = self.target / "addons" / "cookbook"
+        shutil.move(copied / "base", self.target / "game_base")
+        write(copied / "mover" / ".cookbook", "not json")
+        shutil.rmtree(self.cookbook / "recipes" / "base")
+        output = self.status()
+        self.assertIn("addons/cookbook/mover: its .cookbook file cannot be read", output)
+        self.assertIn("game_base: base, copied", output)
+        self.assertIn("the cookbook no longer has this recipe", output)
+
+    def test_status_needs_a_project(self):
+        result = self.cli("status", "--to", self.work, expect=1)
+        self.assertIn("is not a Godot project", result.stderr)
 
 
 class AddErrorTest(FixtureCase):
