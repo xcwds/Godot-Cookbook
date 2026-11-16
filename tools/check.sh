@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Checks the cookbook project.
 #
-#   tools/check.sh            repo + import + smoke + test + cli + lint (the default)
+#   tools/check.sh            repo + lint + import + smoke + test + cli (the default)
 #   tools/check.sh repo       Godot version is consistent, every asset is in CREDITS.md
 #   tools/check.sh import     import assets and parse all scripts
 #   tools/check.sh smoke      run the main scene and every recipes/*/demo.tscn headless for a few frames
@@ -9,21 +9,42 @@
 #   tools/check.sh cli        add each recipe to an empty project with tools/cookbook and load it
 #   tools/check.sh lint       gdlint + gdformat --check
 #
-# GODOT overrides the Godot binary (default: godot).
+# GODOT overrides the Godot binary (default: godot). GODOT_TIMEOUT is how many
+# seconds one Godot run may take before it counts as hung (default: 180).
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 GODOT="${GODOT:-godot}"
+GODOT_TIMEOUT="${GODOT_TIMEOUT:-180}"
 SMOKE_FRAMES=120
 SCRIPT_DIRS=(recipes browser shared tests tools/load_all.gd)
 ASSET_EXTENSIONS="fbx|glb|gltf|obj|blend|dae|png|jpg|jpeg|webp|svg|exr|hdr|ogg|wav|mp3|ttf|otf|woff2"
+
+# Runs Godot headless, stopping it after GODOT_TIMEOUT seconds so that a test
+# whose await never completes fails instead of blocking. Where `timeout` is
+# missing (stock macOS), Godot runs without a limit.
+godot_headless() {
+	if command -v timeout >/dev/null; then
+		timeout --kill-after=10 "$GODOT_TIMEOUT" "$GODOT" --headless "$@"
+	else
+		"$GODOT" --headless "$@"
+	fi
+}
+
+# Explains a failed Godot run whose exit status says it was stopped.
+report_timeout() {
+	if [ "$1" -eq 124 ] || [ "$1" -eq 137 ]; then
+		echo "Godot did not finish within ${GODOT_TIMEOUT}s and was stopped." >&2
+	fi
+}
 
 # Godot often exits 0 despite script or resource errors, so the log is checked as well.
 run_godot() {
 	local log status=0
 	log="$(mktemp)"
-	"$GODOT" --headless --path "${PROJECT:-.}" "$@" >"$log" 2>&1 || status=$?
+	godot_headless --path "${PROJECT:-.}" "$@" >"$log" 2>&1 || status=$?
 	if [ "$status" -ne 0 ] || grep -qE '^(SCRIPT )?ERROR:' "$log"; then
+		report_timeout "$status"
 		cat "$log"
 		rm -f "$log"
 		return 1
@@ -104,9 +125,10 @@ do_test() {
 		# A test can ask for extra Godot arguments with a line such as
 		# "## godot-args: --fixed-fps 120".
 		read -r -a extra < <(sed -n 's/^## godot-args: //p' "$test" | head -1) || true
-		"$GODOT" --headless --path . "${extra[@]}" -s "$test" >"$log" 2>&1 || status=$?
+		godot_headless --path . "${extra[@]}" -s "$test" >"$log" 2>&1 || status=$?
 		if [ "$status" -ne 0 ] || grep -q '^SCRIPT ERROR' "$log"; then
 			cat "$log"
+			report_timeout "$status"
 			rm -f "$log"
 			return 1
 		fi
@@ -238,7 +260,8 @@ case "${1:-default}" in
 	cli) do_cli ;;
 	lint) do_lint ;;
 	test) do_test ;;
-	default) do_repo; do_import; do_smoke; do_test; do_cli; do_lint ;;
+	# The checks that need no Godot run first, so they fail fast.
+	default) do_repo; do_lint; do_import; do_smoke; do_test; do_cli ;;
 	*) sed -n '2,12p' "$0" >&2; exit 2 ;;
 esac
 echo "OK"
