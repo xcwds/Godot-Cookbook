@@ -39,7 +39,7 @@ An optional `project_settings={"physics/common/physics_interpolation": true}` un
 1. Create `recipes/<name>/` with the scripts and scenes, `recipe.cfg`, `README.md` and `demo.tscn`.
 2. Add any new input actions to `project.godot` and list them in `recipe.cfg`.
 3. If the recipe has logic worth pinning down, add a `tests/test_<name>.gd` (see `tests/test_state_machine.gd`). A test that needs extra Godot arguments declares them in a `## godot-args: ...` comment line.
-4. Run `tools/check.sh`. It imports the project, runs the browser and every demo headless, runs the tests, adds each recipe on its own to an empty project to prove it is copyable, and lints.
+4. Run `tools/check.sh`. It checks that the recipe is in the root README table and that its README, `recipe.cfg` and the input actions its scripts read agree, imports the project, runs the browser and every demo headless, runs the tests, adds each recipe on its own to an empty project to prove it is copyable, and lints.
 
 ## Saveable nodes
 

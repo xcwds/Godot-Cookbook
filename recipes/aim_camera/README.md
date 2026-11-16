@@ -25,8 +25,8 @@ If you only want a permanent over-the-shoulder view, you do not need this recipe
 | Kind | Needed |
 |---|---|
 | Recipes | `orbit_camera` |
-| Input actions | `aim`, plus the look actions from `orbit_camera` |
-| Physics layers | Same as `orbit_camera`. |
+| Input actions | `aim`, plus the look actions that `orbit_camera` reads: `look_left`, `look_right`, `look_up`, `look_down` |
+| Physics layers | The spring arm collides with layer 1, as in `orbit_camera`. |
 
 ## Settings
 
