@@ -27,7 +27,7 @@ It unpauses the tree before switching, so it is safe to call from a pause menu.
 
 None. See `recipe.cfg`.
 
-`scene_transition.gd` finds its own scene through the `SCENE_PATH` constant. `tools/cookbook add` updates it; if you move the folder by hand, update that line.
+`scene_transition.gd` finds its own scene next to itself (`get_scene_path()`), so the folder can be moved anywhere in your project without edits.
 
 ## Settings
 

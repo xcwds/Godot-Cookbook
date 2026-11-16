@@ -59,6 +59,14 @@ do_repo() {
 			failed=1
 		fi
 	done < <(git ls-files | grep -iE "\.($ASSET_EXTENSIONS)$")
+
+	# Recipe scripts must find their own files relative to themselves, so a
+	# copied or moved recipe keeps working (rule 2 of docs/recipe_contract.md).
+	local script
+	while IFS= read -r script; do
+		echo "$script contains a res://recipes/ path; resolve it relative to the script" >&2
+		failed=1
+	done < <(git ls-files 'recipes/*.gd' | grep -v '/demo[^/]*$' | xargs grep -l 'res://recipes/' || true)
 	return "$failed"
 }
 
@@ -139,6 +147,48 @@ do_cli() {
 	done
 	rm -rf "$work"
 	do_cli_crlf
+	do_cli_moved
+}
+
+# A recipe folder moved inside a project after it was added must still work.
+# scene_transition finds its scene relative to its script, so it is the case
+# that a hard-coded path would break.
+do_cli_moved() {
+	echo "== cli: scene_transition after moving its folder"
+	local work project
+	work="$(mktemp -d)"
+	project="$work/moved"
+	mkdir -p "$project"
+	printf 'config_version=5\n\n[application]\n\nconfig/name="Moved"\n' >"$project/project.godot"
+	tools/cookbook add scene_transition --to "$project" --dest addons/first >/dev/null
+	mkdir -p "$project/game"
+	mv "$project/addons/first/scene_transition" "$project/game/transition"
+	rm -rf "$project/addons"
+	printf '[gd_scene format=3]\n\n[node name="Next" type="Node"]\n' >"$project/next.tscn"
+	cat >"$project/check_transition.gd" <<'GD'
+extends SceneTree
+
+
+func _initialize() -> void:
+	await process_frame
+	var transition: SceneTransition = SceneTransition.change_scene(self, "res://next.tscn")
+	if transition == null:
+		printerr("ERROR: the moved scene_transition could not create its scene")
+		quit(1)
+		return
+	transition.fade_duration = 0.01
+	# A frame limit rather than awaiting finished, so a failure cannot hang.
+	for i in 300:
+		await process_frame
+		if current_scene != null and current_scene.name == &"Next" and not is_instance_valid(transition):
+			quit(0)
+			return
+	printerr("ERROR: the moved scene_transition did not change scene")
+	quit(1)
+GD
+	PROJECT="$project" run_godot --import
+	PROJECT="$project" run_godot -s "$project/check_transition.gd"
+	rm -rf "$work"
 }
 
 # A project.godot with CRLF endings (a Windows checkout) must be parsed like an
