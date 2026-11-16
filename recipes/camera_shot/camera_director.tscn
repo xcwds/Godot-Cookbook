@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://recipes/camera_shot/camera_director.gd" id="script"]
+
+[node name="CameraDirector" type="Node"]
+script = ExtResource("script")
+
+[node name="Camera" type="Camera3D" parent="."]
