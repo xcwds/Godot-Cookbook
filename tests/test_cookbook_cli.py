@@ -33,16 +33,26 @@ COOKBOOK_PROJECT = (
 
 COOKBOOK_README = """# Fixture cookbook
 
+## Recipes
+
+### Movement
+
+| Recipe | What it does |
+|---|---|
+| [mover](recipes/mover/) | Moves. |
+
+### Systems
+
 | Recipe | What it does |
 |---|---|
 | [base](recipes/base/) | Base recipe. |
-| [mover](recipes/mover/) | Moves. |
 """
 
 BASE_CFG = """[recipe]
 
 name="Base"
 description="Something other recipes build on."
+category="systems"
 depends=[]
 
 [requires]
@@ -56,6 +66,7 @@ MOVER_CFG = """[recipe]
 
 name="Mover"
 description="Moves left and jumps."
+category="movement"
 depends=["base"]
 
 [requires]
@@ -587,9 +598,39 @@ class CheckRecipesTest(FixtureCase):
         self.assertEqual(self.problems(), ["README.md: recipes/mover/ is not in the recipe table"])
 
     def test_a_table_row_without_a_folder(self):
-        self.edit("README.md", "| Moves. |\n", "| Moves. |\n| [gone](recipes/gone/) | Gone. |\n")
+        self.edit("README.md", "| Moves. |\n", "| Moves. |\n| [old](recipes/old/) | Old. |\n")
         self.assertEqual(
-            self.problems(), ["README.md: the recipe table lists 'gone', which is not a folder"]
+            self.problems(), ["README.md: the recipe table lists 'old', which is not a folder"]
+        )
+
+    def test_a_recipe_under_the_wrong_heading(self):
+        self.edit("recipes/mover/recipe.cfg", 'category="movement"', 'category="systems"')
+        self.assertEqual(
+            self.problems(),
+            [
+                "README.md: recipes/mover/ is under 'Movement', but its category is "
+                "'systems' (Systems)"
+            ],
+        )
+
+    def test_a_missing_or_unknown_category(self):
+        self.edit("recipes/mover/recipe.cfg", 'category="movement"', 'category="misc"')
+        self.edit("recipes/base/recipe.cfg", 'category="systems"\n', "")
+        problems = " ".join(self.problems())
+        self.assertIn("recipes/mover/recipe.cfg: category is 'misc'; use one of movement,", problems)
+        self.assertIn("recipes/base/recipe.cfg: category is None;", problems)
+
+    def test_a_table_out_of_order(self):
+        self.edit("README.md", "| [mover](recipes/mover/) | Moves. |\n", "")
+        self.edit(
+            "README.md",
+            "| [base](recipes/base/) | Base recipe. |\n",
+            "| [base](recipes/base/) | Base recipe. |\n| [abc](recipes/abc/) | Abc. |\n",
+        )
+        self.assertIn(
+            "README.md: under 'Systems', 'abc' comes after 'base'; keep each table in "
+            "folder-name order",
+            self.problems(),
         )
 
     def test_a_script_reading_an_undeclared_action(self):

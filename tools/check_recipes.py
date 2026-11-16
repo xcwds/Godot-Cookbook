@@ -5,8 +5,9 @@
 
 Run by `tools/check.sh repo`. Needs only Python 3 and no Godot binary. Checks:
 
-1. The recipe table in the root README.md lists every folder under recipes/
-   and nothing else.
+1. The recipe tables in the root README.md list every folder under recipes/
+   and nothing else, each under the heading of the category in its recipe.cfg
+   and in folder-name order, which is how the recipe browser shows them.
 2. Every recipe a recipe.cfg depends on exists.
 3. Every input action in a recipe.cfg is defined in the cookbook's
    project.godot, so `tools/cookbook add` can copy it.
@@ -34,7 +35,18 @@ ACTION_ASSIGNMENT = re.compile(
     r"\b\w*action\w*\s*(?::\s*\w+\s*)?:?=\s*&?\"(\w+)\"", flags=re.IGNORECASE
 )
 STRING = re.compile(r"&?\"(\w+)\"")
-TABLE_ROW = re.compile(r"^\|\s*\[(\w+)\]\(recipes/(\w+)/?\)", flags=re.M)
+TABLE_ROW = re.compile(r"^\|\s*\[(\w+)\]\(recipes/(\w+)/?\)")
+HEADING = re.compile(r"^#+\s+(.*?)\s*$")
+# recipe.cfg categories and their README headings, in display order. The same
+# list is in browser/recipe_browser.gd.
+CATEGORIES = {
+    "movement": "Movement",
+    "cameras": "Cameras",
+    "combat": "Combat",
+    "world": "World",
+    "ui": "UI",
+    "systems": "Systems",
+}
 # "layer 2", and lists such as "layers 1, 2 and 5".
 LAYER = re.compile(r"\blayers?\s+(\d+(?:(?:\s*,\s*|\s+(?:and|or)\s+)\d+)*)", flags=re.IGNORECASE)
 
@@ -100,8 +112,22 @@ def check(root):
     # 1. The README table.
     readme = (root / "README.md").read_text(encoding="utf-8")
     listed = []
-    for label, folder in TABLE_ROW.findall(readme):
+    listed_under = {}
+    heading = ""
+    for line in readme.splitlines():
+        if HEADING.match(line):
+            heading = HEADING.match(line).group(1)
+        row = TABLE_ROW.match(line)
+        if not row:
+            continue
+        label, folder = row.groups()
+        if listed and listed_under[listed[-1]] == heading and folder < listed[-1]:
+            problems.append(
+                f"README.md: under '{heading}', '{folder}' comes after '{listed[-1]}'; "
+                f"keep each table in folder-name order"
+            )
         listed.append(folder)
+        listed_under[folder] = heading
         if label != folder:
             problems.append(f"README.md: the row for recipes/{folder}/ is labelled '{label}'")
     for name in folders:
@@ -128,6 +154,16 @@ def check(root):
         except cookbook.CookbookError as error:
             problems.append(str(error))
             continue
+        category = manifest.get("category")
+        if category not in CATEGORIES:
+            problems.append(
+                f"{cfg}: category is {category!r}; use one of {', '.join(CATEGORIES)}"
+            )
+        elif listed_under.get(name, CATEGORIES[category]) != CATEGORIES[category]:
+            problems.append(
+                f"README.md: recipes/{name}/ is under '{listed_under[name]}', but its "
+                f"category is '{category}' ({CATEGORIES[category]})"
+            )
         depends = manifest["depends"]
         actions = manifest["input_actions"]
         layers = {int(number) for number in manifest["physics_layers_3d"].values()}

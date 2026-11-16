@@ -21,6 +21,7 @@ A recipe is a folder under `recipes/` that someone can copy into their own proje
 
 name="Human-readable name"
 description="One sentence, shown in the recipe browser."
+category="movement"
 depends=["other_recipe_folder"]
 
 [requires]
@@ -32,16 +33,18 @@ physics_layers_3d={"player": 2}
 
 An optional `project_settings={"physics/common/physics_interpolation": true}` under `[requires]` names project settings the recipe works best with. `tools/cookbook` reports them and never changes them.
 
-`input_actions` are actions the recipe reads and the target project must define; `tools/cookbook add` copies their bindings from this project's `project.godot`. `physics_layers_3d` maps a layer name to the layer number the recipe uses. `depends` lists recipe folder names. Keep the values JSON-compatible, as above, so both Godot and the CLI can read them.
+`input_actions` are actions the recipe reads and the target project must define; `tools/cookbook add` copies their bindings from this project's `project.godot`. `physics_layers_3d` maps a layer name to the layer number the recipe uses. `category` is one of `movement`, `cameras`, `combat`, `world`, `ui` and `systems`; the recipe browser and the tables in the root README group recipes by it. `depends` lists recipe folder names. Keep the values JSON-compatible, as above, so both Godot and the CLI can read them.
 
 ## Adding a recipe
 
-1. Create `recipes/<name>/` with the scripts and scenes, `recipe.cfg`, `README.md` and `demo.tscn`.
+1. Create `recipes/<name>/` with the scripts and scenes, `recipe.cfg`, `README.md` and `demo.tscn`, and add a row for it to the root README under its category's heading.
 2. Add any new input actions to `project.godot` and list them in `recipe.cfg`.
 3. If the recipe has logic worth pinning down, add a `tests/test_<name>.gd` that extends `res://tests/support/test_case.gd` (see `tests/test_health.gd`). Every function named `test_*` runs, in the order written, with nothing to register. The base script provides `_check()`, `_check_eq()`, `_spawn()` (adds a node and frees it after the test), waits such as `_wait(seconds)`, and `_press()` / `_tap()` for input actions; its header comment lists the rest. A test that needs extra Godot arguments declares them in a `## godot-args: ...` comment line.
 4. Run `tools/check.sh`. It checks that the recipe is in the root README table and that its README, `recipe.cfg` and the input actions its scripts read agree, imports the project, runs the browser and every demo headless, runs the tests, adds each recipe on its own to an empty project to prove it is copyable, and lints.
 
 ## Saveable nodes
+
+This is one of several conventions that cross recipes; [architecture.md](architecture.md) lists them all.
 
 A recipe with state worth keeping can take part in saving without depending on the `save_load` recipe. The convention is duck-typed, so it costs nothing in a project without `save_load`:
 

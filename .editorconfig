@@ -2,3 +2,23 @@ root = true
 
 [*]
 charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+
+# gdformat writes tabs, and Godot writes its text formats with LF endings.
+[*.gd]
+indent_style = tab
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.{py,md,yml,yaml}]
+indent_style = space
+
+[*.py]
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[{*.sh,*.json}]
+indent_style = tab
