@@ -1,0 +1,63 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://recipes/object_pool/demo.gd" id="script"]
+[ext_resource type="Script" path="res://recipes/object_pool/object_pool.gd" id="pool"]
+[ext_resource type="PackedScene" path="res://recipes/object_pool/demo_bubble.tscn" id="bubble"]
+
+[node name="Demo" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 32
+
+[node name="Layout" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Hint" type="Label" parent="Margin/Layout"]
+layout_mode = 2
+text = "Each label comes from a pool of 4 and goes back when it has faded. \"use 3\" means that instance has been handed out three times. Spawn 12 at once and the pool grows."
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Spawn" type="Button" parent="Margin/Layout/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Spawn 1"
+
+[node name="SpawnMany" type="Button" parent="Margin/Layout/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Spawn 12"
+
+[node name="Status" type="Label" parent="Margin/Layout/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Area" type="Control" parent="Margin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Pool" type="Node" parent="."]
+script = ExtResource("pool")
+scene = ExtResource("bubble")
+initial_size = 4

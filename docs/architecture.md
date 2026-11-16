@@ -15,9 +15,10 @@ flowchart LR
     hitbox --> health
     health --> meter
     health_bar --> meter
+    projectile --> object_pool
 ```
 
-The other recipes depend on nothing: `first_person_movement`, `moving_platform`, `checkpoint`, `interaction`, `inventory`, `projectile`, `pause_menu`, `settings_menu`, `save_load` and `scene_transition`.
+The other recipes depend on nothing: `first_person_movement`, `moving_platform`, `checkpoint`, `interaction`, `inventory`, `pause_menu`, `settings_menu`, `save_load` and `scene_transition`.
 
 Everything else recipes do for each other goes through the conventions below, which are looked up by name at run time. A recipe that offers one works without the recipe that uses it, and the other way round.
 
