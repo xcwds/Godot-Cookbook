@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Checks the cookbook project.
 #
-#   tools/check.sh            repo + lint + import + smoke + test + cli (the default)
+#   tools/check.sh            repo + unit + lint + import + smoke + test + cli (the default)
 #   tools/check.sh repo       Godot version is consistent, every asset is in CREDITS.md,
-#                             tools/newer_stable.sh compares versions correctly
+#                             tools/newer_stable.sh compares versions correctly, and the
+#                             READMEs, recipe.cfg files and scripts agree (tools/check_recipes.py)
+#   tools/check.sh unit       run tests/test_*.py, the tests of the Python tools
 #   tools/check.sh import     import assets and parse all scripts
 #   tools/check.sh smoke      run the main scene and every recipes/*/demo.tscn headless for a few frames
 #   tools/check.sh test       run tests/test_*.gd headless
@@ -106,7 +108,19 @@ do_repo() {
 4.7-stable|4.7.1-stable 4.7-stable|4.7.1-stable
 4.7.2-stable|latest nightly|
 CASES
+
+	# READMEs, recipe.cfg files and the input actions scripts read must agree.
+	python3 tools/check_recipes.py || failed=1
 	return "$failed"
+}
+
+# Tests of the Python tools. They need no Godot binary.
+do_unit() {
+	local test
+	for test in tests/test_*.py; do
+		echo "== unit: $test"
+		python3 -B "$test"
+	done
 }
 
 do_import() {
@@ -273,13 +287,14 @@ do_lint() {
 
 case "${1:-default}" in
 	repo) do_repo ;;
+	unit) do_unit ;;
 	import) do_import ;;
 	smoke) do_smoke ;;
 	cli) do_cli ;;
 	lint) do_lint ;;
 	test) do_test ;;
 	# The checks that need no Godot run first, so they fail fast.
-	default) do_repo; do_lint; do_import; do_smoke; do_test; do_cli ;;
-	*) sed -n '2,13p' "$0" >&2; exit 2 ;;
+	default) do_repo; do_unit; do_lint; do_import; do_smoke; do_test; do_cli ;;
+	*) sed -n '2,16p' "$0" >&2; exit 2 ;;
 esac
 echo "OK"

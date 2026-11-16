@@ -59,15 +59,15 @@ Copying a recipe folder by hand works too: take the recipes it depends on, skip 
 | `browser/` | The recipe browser shown when the project runs. |
 | `docs/` | [Recipe contract](docs/recipe_contract.md), [README template](docs/recipe_template.md), [style guide](docs/style_guide.md), [upgrading Godot](docs/upgrading.md). |
 | `tests/` | Headless test scripts (`tests/test_*.gd`). |
-| `tools/` | `cookbook` (add recipes to a project), `check.sh`, `install_godot.sh`. |
+| `tools/` | `cookbook` (add recipes to a project), `check.sh`, `check_recipes.py`, `install_godot.sh`. |
 
 ## Development
 
 Open the repository in the dev container (`.devcontainer/`) to get the pinned Godot version (headless), `gdlint` and `gdformat`. Outside a container, `tools/install_godot.sh` installs the same Godot binary on Linux.
 
 ```bash
-tools/check.sh        # repo checks, import, demos, tests, recipes in an empty project, lint
-tools/check.sh test   # only the tests; also: repo, import, smoke, cli, lint
+tools/check.sh        # repo checks, tool tests, lint, import, demos, tests, recipes in an empty project
+tools/check.sh test   # only the tests; also: repo, unit, import, smoke, cli, lint
 ```
 
 The same checks run on every pull request. The container is headless: use it to import, lint and test. To play the demos, open the project in the Godot editor on your machine. `docs/vscode_sample_settings.json` has editor settings for working outside the container.
