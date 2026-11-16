@@ -49,6 +49,7 @@ Starter recipes for 3D game development in Godot 4. Each recipe is a small folde
 
 | Recipe | What it is |
 |---|---|
+| [meter](recipes/meter/) | A number between zero and a maximum, with add, spend, drain and signals. |
 | [save_load](recipes/save_load/) | Save the current scene's state to a file and restore it. |
 | [scene_transition](recipes/scene_transition/) | Fade between scenes with background loading and a progress bar. |
 | [state_machine](recipes/state_machine/) | Node-based finite state machine. |

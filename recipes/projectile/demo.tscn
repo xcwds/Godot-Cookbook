@@ -43,9 +43,9 @@ surface_material_override/0 = SubResource("dummy_material")
 script = ExtResource("health")
 max_health = 5.0
 
-[node name="HealthBar3d" parent="Dummies/Dummy1" node_paths=PackedStringArray("health") instance=ExtResource("health_bar")]
+[node name="HealthBar3d" parent="Dummies/Dummy1" node_paths=PackedStringArray("meter") instance=ExtResource("health_bar")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
-health = NodePath("../Health")
+meter = NodePath("../Health")
 
 [node name="Hurtbox" parent="Dummies/Dummy1" node_paths=PackedStringArray("health") instance=ExtResource("hurtbox")]
 health = NodePath("../Health")
@@ -60,9 +60,9 @@ surface_material_override/0 = SubResource("dummy_material")
 script = ExtResource("health")
 max_health = 5.0
 
-[node name="HealthBar3d" parent="Dummies/Dummy2" node_paths=PackedStringArray("health") instance=ExtResource("health_bar")]
+[node name="HealthBar3d" parent="Dummies/Dummy2" node_paths=PackedStringArray("meter") instance=ExtResource("health_bar")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
-health = NodePath("../Health")
+meter = NodePath("../Health")
 
 [node name="Hurtbox" parent="Dummies/Dummy2" node_paths=PackedStringArray("health") instance=ExtResource("hurtbox")]
 health = NodePath("../Health")
@@ -77,9 +77,9 @@ surface_material_override/0 = SubResource("dummy_material")
 script = ExtResource("health")
 max_health = 5.0
 
-[node name="HealthBar3d" parent="Dummies/Dummy3" node_paths=PackedStringArray("health") instance=ExtResource("health_bar")]
+[node name="HealthBar3d" parent="Dummies/Dummy3" node_paths=PackedStringArray("meter") instance=ExtResource("health_bar")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
-health = NodePath("../Health")
+meter = NodePath("../Health")
 
 [node name="Hurtbox" parent="Dummies/Dummy3" node_paths=PackedStringArray("health") instance=ExtResource("hurtbox")]
 health = NodePath("../Health")

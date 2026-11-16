@@ -13,7 +13,8 @@ flowchart LR
     aim_camera --> orbit_camera
     lock_on --> orbit_camera
     hitbox --> health
-    health_bar --> health
+    health --> meter
+    health_bar --> meter
 ```
 
 The other recipes depend on nothing: `first_person_movement`, `moving_platform`, `checkpoint`, `interaction`, `inventory`, `projectile`, `pause_menu`, `settings_menu`, `save_load` and `scene_transition`.
@@ -24,7 +25,7 @@ Everything else recipes do for each other goes through the conventions below, wh
 
 | Convention | Offered by | Used by | What it means |
 |---|---|---|---|
-| Group `saveable`, with `save_data()`, `load_data(data)` and optional `load_missing()` | `Health`, `Inventory`, `Pickup`, `Respawner`, both characters, `SaveTransform` | `SaveGame` (`save_load`) | The node's state is written to a save and restored from it. Details: "Saveable nodes" in the [recipe contract](recipe_contract.md). |
+| Group `saveable`, with `save_data()`, `load_data(data)` and optional `load_missing()` | `Meter`, `Health`, `Inventory`, `Pickup`, `Respawner`, both characters, `SaveTransform` | `SaveGame` (`save_load`) | The node's state is written to a save and restored from it. Details: "Saveable nodes" in the [recipe contract](recipe_contract.md). |
 | Method `teleport(transform)` | `ThirdPersonCharacter`, `FirstPersonCharacter` | `Respawner` (`checkpoint`), `SaveTransform` (`save_load`) | Puts the character somewhere new and lets it clean up: stop, leave a dash, face the transform's direction, reset interpolation. A body without the method is only moved. |
 | Group `player` | Your player node. No recipe adds it; the demos do. | `ChaseEnemy`, when its `target` is not set (`target_group`) | Who the enemy chases. |
 | Group `lock_on_targets` | `LockOnTarget` | `LockOn` | What can be locked onto. |

@@ -15,8 +15,8 @@ max_health = 100.0
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
 
-[node name="HealthBar3d" parent="." node_paths=PackedStringArray("health") instance=ExtResource("bar_3d")]
-health = NodePath("../Health")
+[node name="HealthBar3d" parent="." node_paths=PackedStringArray("meter") instance=ExtResource("bar_3d")]
+meter = NodePath("../Health")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
@@ -31,9 +31,9 @@ theme_override_constants/separation = 12
 layout_mode = 2
 text = "Both bars follow the same Health node: 2D below, 3D billboard in the scene."
 
-[node name="HealthBar2d" parent="UI/Layout" node_paths=PackedStringArray("health") instance=ExtResource("bar_2d")]
+[node name="HealthBar2d" parent="UI/Layout" node_paths=PackedStringArray("meter") instance=ExtResource("bar_2d")]
 layout_mode = 2
-health = NodePath("../../../Health")
+meter = NodePath("../../../Health")
 
 [node name="Buttons" type="HBoxContainer" parent="UI/Layout"]
 layout_mode = 2
