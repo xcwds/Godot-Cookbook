@@ -19,7 +19,7 @@ extends RefCounted
 const GROUP := &"saveable"
 const SAVE_DIR := "user://saves"
 ## Bump when the shape of the save data changes, and convert old saves in
-## [method _read]. Bump it too when a game update adds saveable nodes to a
+## [method _migrate]. Bump it too when a game update adds saveable nodes to a
 ## scene: nodes missing from an older save are kept rather than removed.
 const VERSION := 1
 const DEFAULT_SLOT := "slot_1"
@@ -62,8 +62,15 @@ static func save_game(tree: SceneTree, slot := DEFAULT_SLOT) -> Error:
 	var file := FileAccess.open(path + ".tmp", FileAccess.WRITE)
 	if file == null:
 		return FileAccess.get_open_error()
-	file.store_string(JSON.stringify(save, "\t"))
+	var stored := file.store_string(JSON.stringify(save, "\t"))
+	file.flush()
+	var write_error := file.get_error()
 	file.close()
+	# A full disk leaves a short temporary file: keep the previous save.
+	if not stored or (write_error != OK and write_error != ERR_FILE_EOF):
+		DirAccess.remove_absolute(path + ".tmp")
+		push_error("SaveGame: could not write %s." % path)
+		return ERR_FILE_CANT_WRITE
 	return DirAccess.rename_absolute(path + ".tmp", path)
 
 
@@ -94,7 +101,7 @@ static func load_game(tree: SceneTree, slot := DEFAULT_SLOT) -> Error:
 
 
 static func _apply(scene: Node, save: Dictionary, slot: String) -> void:
-	var nodes: Dictionary = JSON.to_native(save["nodes"])
+	var nodes: Dictionary = save["nodes"]
 	# A save from an older version may predate saveable nodes added since,
 	# so only a save of this version can say that a node was gone.
 	var can_remove: bool = save["version"] == VERSION
@@ -110,10 +117,13 @@ static func _apply(scene: Node, save: Dictionary, slot: String) -> void:
 			if node.has_method(&"load_data"):
 				node.load_data(nodes[key])
 		elif can_remove:
+			print_verbose("SaveGame: %s is not in the save, so it is removed." % key)
 			if node.has_method(&"load_missing"):
 				node.load_missing()
 			else:
 				node.queue_free()
+		else:
+			print_verbose("SaveGame: %s is not in the older save, so it is kept." % key)
 	events.loaded.emit(slot)
 
 
@@ -140,23 +150,70 @@ static func get_save_path(slot: String) -> String:
 
 
 ## Reads and checks a save file. Returns an empty dictionary if it is
-## missing, damaged, or from a newer version of the game.
+## missing, damaged, or from a newer version of the game. Otherwise
+## [code]nodes[/code] holds engine types again and maps each node path to a
+## dictionary, and an older save has been through [method _migrate].
 static func _read(slot: String) -> Dictionary:
 	var path := get_save_path(slot)
 	if not FileAccess.file_exists(path):
 		return {}
+	# The text is parsed as data only, so a save file cannot run code.
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not parsed is Dictionary:
 		push_error("SaveGame: %s is not a valid save file." % path)
 		return {}
 	var save: Dictionary = parsed
-	for key: String in ["version", "scene", "saved_at", "nodes"]:
-		if not save.has(key):
-			push_error("SaveGame: %s is missing '%s'." % [path, key])
-			return {}
+	var problem := _check_save(save)
+	if problem != "":
+		push_error("SaveGame: %s is damaged: %s." % [path, problem])
+		return {}
+	save["version"] = int(save["version"])
 	if save["version"] > VERSION:
 		push_error("SaveGame: %s was made by a newer version of the game." % path)
 		return {}
+	save["nodes"] = JSON.to_native(save["nodes"])
+	if save["version"] < VERSION:
+		save = _migrate(save)
+	return save
+
+
+## What is wrong with a parsed save, or an empty string if nothing is.
+static func _check_save(save: Dictionary) -> String:
+	var types := {
+		"version": [TYPE_INT, TYPE_FLOAT],
+		"scene": [TYPE_STRING],
+		"saved_at": [TYPE_STRING],
+		"nodes": [TYPE_DICTIONARY],
+	}
+	for key: String in types:
+		if not save.has(key):
+			return "'%s' is missing" % key
+		if typeof(save[key]) not in types[key]:
+			return "'%s' has the wrong type" % key
+	var version: float = save["version"]
+	if version < 0.0 or version != floorf(version):
+		return "'version' is not a whole number"
+	var nodes: Variant = JSON.to_native(save["nodes"])
+	if not nodes is Dictionary:
+		return "'nodes' is not a dictionary"
+	for key: Variant in nodes:
+		if not key is String or not nodes[key] is Dictionary:
+			return "the entry for '%s' is not a dictionary" % [key]
+	return ""
+
+
+## Converts a save from an older [constant VERSION] to the current layout.
+## [code]save["nodes"][/code] maps node paths to their data. Keep
+## [code]save["version"][/code] as it is: an older save may predate saveable
+## nodes added since, so nodes it has no entry for are kept, not removed.
+## [codeblock]
+## if save["version"] < 2:
+##     for path: String in save["nodes"]:
+##         var data: Dictionary = save["nodes"][path]
+##         if data.has("hp"):
+##             data["current"] = data["hp"]
+## [/codeblock]
+static func _migrate(save: Dictionary) -> Dictionary:
 	return save
 
 
