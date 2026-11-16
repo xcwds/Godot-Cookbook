@@ -2,7 +2,9 @@
 
 The cookbook targets one Godot version at a time, pinned in `.godot-version`. Recipes are only promised to work on that version.
 
-A weekly workflow (`.github/workflows/latest_stable.yml`) compares the pin with the latest stable release. When a newer one exists it runs the checks against it and opens an "Upgrade to Godot ..." issue saying whether they pass.
+A weekly workflow (`.github/workflows/latest_stable.yml`) looks for a stable release with a higher version number than the pin. A patch release of an older minor version is not an upgrade and is ignored. When a newer release exists, the workflow runs the checks against it and opens an "Upgrade to Godot ..." issue saying whether they pass.
+
+Each version gets one issue. If you close it without upgrading, the workflow does not open it again; it stays quiet until a still newer release appears.
 
 ## When
 
