@@ -1,4 +1,4 @@
-extends SceneTree
+extends "res://tests/support/test_case.gd"
 ## Headless test for recipes/third_person_movement. It plays the character
 ## with simulated input in the shared demo level. Run with:
 ##   godot --headless --path . -s tests/test_third_person_movement.gd
@@ -11,51 +11,17 @@ const ACTIONS: Array[StringName] = [
 ## Height of the character's origin when standing on the floor.
 const STANDING_Y := 1.09
 
-var _failures := 0
 var _character: ThirdPersonCharacter
 var _jumps := 0
 var _dashes := 0
 
 
-func _initialize() -> void:
-	# Nodes only become ready once the tree is running.
-	await process_frame
+func _before_all() -> void:
 	root.add_child(LEVEL.instantiate())
 	_character = CHARACTER.instantiate()
 	root.add_child(_character)
 	_character.jumped.connect(func() -> void: _jumps += 1)
 	_character.dashed.connect(func() -> void: _dashes += 1)
-
-	await _test_walks_relative_to_view()
-	await _test_holding_jump_jumps_once()
-	await _test_jump_is_buffered_before_landing()
-	await _test_coyote_time()
-	await _test_dash_goes_where_the_character_faces()
-	await _test_one_air_dash_per_jump()
-	await _test_wall_jump()
-	await _test_rotated_root_faces_where_it_goes()
-	await _test_teleport_stops_a_dash()
-	await _test_respawner_teleports_the_character()
-	if _failures == 0:
-		print("test_third_person_movement: OK")
-	quit(1 if _failures > 0 else 0)
-
-
-func _check(condition: bool, message: String) -> void:
-	if not condition:
-		_failures += 1
-		printerr("FAIL: " + message)
-
-
-func _wait(seconds: float) -> void:
-	for i in roundi(seconds * Engine.physics_ticks_per_second):
-		await physics_frame
-
-
-func _tap(action: StringName) -> void:
-	Input.action_press(action)
-	await _wait(0.05)
-	Input.action_release(action)
 
 
 func _state() -> StringName:
@@ -85,7 +51,7 @@ func _horizontal_velocity() -> Vector3:
 	return Vector3(_character.velocity.x, 0.0, _character.velocity.z).normalized()
 
 
-func _test_walks_relative_to_view() -> void:
+func test_walks_relative_to_view() -> void:
 	await _reset(Vector3(0, 1.2, 0))
 	_check(_state() == &"Ground", "settles on the ground")
 	Input.action_press(&"move_up")
@@ -95,23 +61,22 @@ func _test_walks_relative_to_view() -> void:
 
 	var view := Node3D.new()
 	view.rotation.y = PI / 2.0
-	root.add_child(view)
+	_spawn(view)
 	_character.view = view
 	var x_before := _character.position.x
 	await _wait(0.5)
 	_check(_character.position.x < x_before - 2.0, "turning the view turns the movement")
 	_character.view = null
-	view.free()
 
 
-func _test_holding_jump_jumps_once() -> void:
+func test_holding_jump_jumps_once() -> void:
 	await _reset(Vector3(0, 1.2, 0))
 	Input.action_press(&"jump")
 	await _wait(2.5)
 	_check(_jumps == 1, "holding jump jumps once, got %d" % _jumps)
 
 
-func _test_jump_is_buffered_before_landing() -> void:
+func test_jump_is_buffered_before_landing() -> void:
 	await _reset(Vector3(0, 1.2, 0))
 	await _tap(&"jump")
 	await _wait(0.4)
@@ -130,7 +95,7 @@ func _test_jump_is_buffered_before_landing() -> void:
 	_check(_jumps == 2, "a press just before landing jumps on landing, got %d" % _jumps)
 
 
-func _test_coyote_time() -> void:
+func test_coyote_time() -> void:
 	# Top of a pillar in the demo level: 2 m square, 10 m high.
 	var pillar_top := Vector3(8, 10.0 + STANDING_Y + 0.1, 8)
 	await _reset(pillar_top)
@@ -150,7 +115,7 @@ func _test_coyote_time() -> void:
 	_check(_jumps == 0, "but not once coyote time has passed")
 
 
-func _test_dash_goes_where_the_character_faces() -> void:
+func test_dash_goes_where_the_character_faces() -> void:
 	# Facing -X: the old controller ended this dash moving toward +X.
 	await _reset(Vector3(0, 1.2, 0), PI / 2.0)
 	var start := _character.position
@@ -165,7 +130,7 @@ func _test_dash_goes_where_the_character_faces() -> void:
 	_check(_state() == &"Ground", "dash returns to the ground state")
 
 
-func _test_one_air_dash_per_jump() -> void:
+func test_one_air_dash_per_jump() -> void:
 	await _reset(Vector3(0, 1.2, 0))
 	# A short cooldown, so that only the air-dash rule can block the second dash.
 	var cooldown := _character.dash_cooldown
@@ -183,7 +148,7 @@ func _test_one_air_dash_per_jump() -> void:
 	_character.dash_cooldown = cooldown
 
 
-func _test_wall_jump() -> void:
+func test_wall_jump() -> void:
 	# The room's wall is at z = -25, facing +Z.
 	await _reset(Vector3(0, 1.2, -24))
 	Input.action_press(&"move_up")
@@ -213,7 +178,7 @@ func _test_wall_jump() -> void:
 
 ## A level that spawns the player facing another way rotates the root. The
 ## model must still face the world-space direction it moves in.
-func _test_rotated_root_faces_where_it_goes() -> void:
+func test_rotated_root_faces_where_it_goes() -> void:
 	_character.rotation.y = PI / 2.0
 
 	await _reset(Vector3(0, 1.2, 0))
@@ -238,7 +203,7 @@ func _test_rotated_root_faces_where_it_goes() -> void:
 	await _reset(Vector3(0, 1.2, 0))
 	var view := Node3D.new()
 	view.rotation.y = -PI / 2.0
-	root.add_child(view)
+	_spawn(view)
 	_character.view = view
 	_character.strafe = true
 	await _wait(0.1)
@@ -254,7 +219,7 @@ func _test_rotated_root_faces_where_it_goes() -> void:
 
 ## A respawn or load in the middle of a dash must not finish the dash from the
 ## new place.
-func _test_teleport_stops_a_dash() -> void:
+func test_teleport_stops_a_dash() -> void:
 	await _reset(Vector3(0, 1.2, 0))
 	await _tap(&"dash")
 	_check(_state() == &"Dash", "dashing before the teleport")
@@ -289,7 +254,7 @@ func _test_teleport_stops_a_dash() -> void:
 	_check(_jumps == 0, "a jump buffered before the teleport is not used after it, got %d" % _jumps)
 
 
-func _test_respawner_teleports_the_character() -> void:
+func test_respawner_teleports_the_character() -> void:
 	var respawner := Respawner.new()
 	_character.add_child(respawner)
 	await _reset(Vector3(3, 1.2, 3))

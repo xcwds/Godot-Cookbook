@@ -1,39 +1,16 @@
-extends SceneTree
+extends "res://tests/support/test_case.gd"
 ## Headless test for recipes/orbit_camera and recipes/aim_camera. Run with:
 ##   godot --headless --path . -s tests/test_cameras.gd
 
 const ORBIT_CAMERA := preload("res://recipes/orbit_camera/orbit_camera.tscn")
 const AIM_CAMERA := preload("res://recipes/aim_camera/aim_camera.tscn")
 
-var _failures := 0
-
-
-func _initialize() -> void:
-	# Nodes only become ready once the tree is running.
-	await process_frame
-	_test_follows_target_and_ignores_parent_rotation()
-	_test_pitch_is_clamped_and_yaw_wraps()
-	_test_look_actions_turn_the_camera()
-	_test_zoom_is_clamped()
-	_test_inactive_rig_does_nothing()
-	_test_aim_takes_over_and_hands_back()
-	_test_snaps_after_a_teleport()
-	if _failures == 0:
-		print("test_cameras: OK")
-	quit(1 if _failures > 0 else 0)
-
-
-func _check(condition: bool, message: String) -> void:
-	if not condition:
-		_failures += 1
-		printerr("FAIL: " + message)
-
 
 func _make_target() -> Node3D:
 	var target := Node3D.new()
 	# Moved by hand between frames here, so it is not smoothed between ticks.
 	target.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
-	root.add_child(target)
+	_spawn(target)
 	return target
 
 
@@ -44,7 +21,7 @@ func _make_orbit(target: Node3D) -> OrbitCamera:
 	return rig
 
 
-func _test_follows_target_and_ignores_parent_rotation() -> void:
+func test_follows_target_and_ignores_parent_rotation() -> void:
 	var target := _make_target()
 	target.position = Vector3(3, 0, 4)
 	var rig := _make_orbit(target)
@@ -60,10 +37,9 @@ func _test_follows_target_and_ignores_parent_rotation() -> void:
 	target.position = Vector3(20, 0, 0)
 	rig._process(0.016)
 	_check(rig.global_position.x > 10.0 and rig.global_position.x < 20.0, "smoothed follow lags")
-	target.free()
 
 
-func _test_pitch_is_clamped_and_yaw_wraps() -> void:
+func test_pitch_is_clamped_and_yaw_wraps() -> void:
 	var target := _make_target()
 	var rig := _make_orbit(target)
 	rig.set_look(0.0, 5.0)
@@ -72,10 +48,9 @@ func _test_pitch_is_clamped_and_yaw_wraps() -> void:
 	_check(is_equal_approx(rig.pitch, deg_to_rad(rig.pitch_min_degrees)), "pitch clamps at min")
 	rig.set_look(TAU + 0.5, 0.0)
 	_check(is_equal_approx(rig.yaw, 0.5), "yaw wraps")
-	target.free()
 
 
-func _test_look_actions_turn_the_camera() -> void:
+func test_look_actions_turn_the_camera() -> void:
 	var target := _make_target()
 	var rig := _make_orbit(target)
 	rig.set_look(0.0, 0.0)
@@ -93,10 +68,9 @@ func _test_look_actions_turn_the_camera() -> void:
 	rig._process(0.1)
 	Input.action_release(&"look_up")
 	_check(rig.pitch < 0.0, "invert_y flips it")
-	target.free()
 
 
-func _test_zoom_is_clamped() -> void:
+func test_zoom_is_clamped() -> void:
 	var target := _make_target()
 	var rig := _make_orbit(target)
 	rig.set_distance(100.0)
@@ -104,10 +78,9 @@ func _test_zoom_is_clamped() -> void:
 	rig.set_distance(0.0)
 	_check(rig.distance == rig.zoom_min, "distance clamps at zoom_min")
 	_check(rig.get_node("Pitch/SpringArm").spring_length == rig.zoom_min, "spring arm follows")
-	target.free()
 
 
-func _test_inactive_rig_does_nothing() -> void:
+func test_inactive_rig_does_nothing() -> void:
 	var target := _make_target()
 	var rig := _make_orbit(target)
 	rig.deactivate()
@@ -120,10 +93,9 @@ func _test_inactive_rig_does_nothing() -> void:
 	_check(
 		rig.yaw == 0.0 and rig.global_position == before, "inactive rig ignores input and target"
 	)
-	target.free()
 
 
-func _test_aim_takes_over_and_hands_back() -> void:
+func test_aim_takes_over_and_hands_back() -> void:
 	var target := _make_target()
 	var orbit := _make_orbit(target)
 	var aim: AimCamera = AIM_CAMERA.instantiate()
@@ -155,10 +127,9 @@ func _test_aim_takes_over_and_hands_back() -> void:
 		"orbit keeps the aim look"
 	)
 	_check(events == ["started", "ended"], "signals are emitted once each")
-	target.free()
 
 
-func _test_snaps_after_a_teleport() -> void:
+func test_snaps_after_a_teleport() -> void:
 	var target := _make_target()
 	var rig := _make_orbit(target)
 	rig._process(0.016)
@@ -176,4 +147,3 @@ func _test_snaps_after_a_teleport() -> void:
 	late_target.position = Vector3(-30, 0, 0)
 	late._process(0.016)
 	_check(late.global_position.is_equal_approx(Vector3(-30, 1.2, 0)), "first follow snaps")
-	late_target.free()

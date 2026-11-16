@@ -145,8 +145,10 @@ do_smoke() {
 	return "$missing"
 }
 
-# Tests print expected engine errors, so a test fails on its exit code or on
-# a script error, which would otherwise end a test function silently.
+# Each tests/test_*.gd extends tests/support/test_case.gd, which finds and runs
+# its test_* functions. Tests print expected engine errors, so a test fails on
+# its exit code or on a script error, which would otherwise end a test function
+# silently.
 do_test() {
 	local test log status
 	local -a extra
@@ -164,6 +166,8 @@ do_test() {
 			rm -f "$log"
 			return 1
 		fi
+		# One line per test function, then the file's summary.
+		grep -E '^  test_|: OK \(' "$log" || true
 	done
 	rm -f "$log"
 }

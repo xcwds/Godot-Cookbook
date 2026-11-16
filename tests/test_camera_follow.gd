@@ -1,4 +1,4 @@
-extends SceneTree
+extends "res://tests/support/test_case.gd"
 ## Headless test that what the camera follows does not jitter against it,
 ## and that teleports do not slide, at a render rate above the physics rate.
 ## godot-args: --fixed-fps 120
@@ -13,27 +13,10 @@ const PROJECTILE := preload("res://recipes/projectile/projectile.tscn")
 ## Largest frame-to-frame wobble that counts as steady, in metres.
 const TOLERANCE := 0.001
 
-var _failures := 0
 
-
-func _initialize() -> void:
-	await process_frame
+func _before_all() -> void:
 	if not OS.get_cmdline_args().has("--fixed-fps"):
 		print("(run with --fixed-fps 120: this only tests anything above the physics rate)")
-	await _test_third_person_is_steady(true)
-	await _test_third_person_is_steady(false)
-	await _test_first_person_view_is_steady()
-	await _test_respawn_does_not_slide()
-	await _test_projectile_does_not_streak_from_its_last_position()
-	if _failures == 0:
-		print("test_camera_follow: OK")
-	quit(1 if _failures > 0 else 0)
-
-
-func _check(condition: bool, message: String) -> void:
-	if not condition:
-		_failures += 1
-		printerr("FAIL: " + message)
 
 
 func _open(scene: String) -> void:
@@ -62,7 +45,15 @@ func _measure_spread(body: Node3D, follower: Node3D) -> float:
 	return highest - lowest
 
 
-func _test_third_person_is_steady(interpolation: bool) -> void:
+func test_third_person_is_steady_with_interpolation() -> void:
+	await _third_person_is_steady(true)
+
+
+func test_third_person_is_steady_without_interpolation() -> void:
+	await _third_person_is_steady(false)
+
+
+func _third_person_is_steady(interpolation: bool) -> void:
 	physics_interpolation = interpolation
 	await _open(THIRD_PERSON_DEMO)
 	var label := "physics interpolation %s" % ("on" if interpolation else "off")
@@ -76,7 +67,7 @@ func _test_third_person_is_steady(interpolation: bool) -> void:
 	physics_interpolation = true
 
 
-func _test_first_person_view_is_steady() -> void:
+func test_first_person_view_is_steady() -> void:
 	await _open(FIRST_PERSON_DEMO)
 	var player: FirstPersonCharacter = current_scene.get_node("Player")
 	# Start well back from the demo's beam so there is room to run.
@@ -93,7 +84,7 @@ func _test_first_person_view_is_steady() -> void:
 	_check(player.head.global_rotation.y > before, "looking turns the view within one frame")
 
 
-func _test_respawn_does_not_slide() -> void:
+func test_respawn_does_not_slide() -> void:
 	await _open(CHECKPOINT_DEMO)
 	var player: Node3D = current_scene.get_node("Player")
 	var respawner: Respawner = player.get_node("Respawner")
@@ -114,10 +105,10 @@ func _test_respawn_does_not_slide() -> void:
 	_check(worst < 0.05, "a respawn is drawn at the spawn at once, off by %.2f m" % worst)
 
 
-func _test_projectile_does_not_streak_from_its_last_position() -> void:
+func test_projectile_does_not_streak_from_its_last_position() -> void:
 	var projectile: Projectile = PROJECTILE.instantiate()
 	projectile.speed = 1.0
-	root.add_child(projectile)
+	_spawn(projectile)
 	projectile.global_position = Vector3(50, 0, 0)
 	for i in 4:
 		await physics_frame
@@ -128,4 +119,3 @@ func _test_projectile_does_not_streak_from_its_last_position() -> void:
 		var drawn_at := projectile.get_global_transform_interpolated().origin
 		worst = maxf(worst, drawn_at.distance_to(Vector3(0, 5, 0)))
 	_check(worst < 0.1, "a launched projectile is drawn at the muzzle, off by %.2f m" % worst)
-	projectile.free()

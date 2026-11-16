@@ -1,4 +1,4 @@
-extends SceneTree
+extends "res://tests/support/test_case.gd"
 ## Headless test for recipes/first_person_movement. It plays the character
 ## with simulated input in the recipe's demo. Run with:
 ##   godot --headless --path . -s tests/test_first_person_movement.gd
@@ -18,39 +18,15 @@ const ACTIONS: Array[StringName] = [
 	&"crouch",
 ]
 
-var _failures := 0
 var _character: FirstPersonCharacter
 var _jumps := 0
 
 
-func _initialize() -> void:
+func _before_all() -> void:
 	change_scene_to_file(DEMO)
-	await process_frame
 	await process_frame
 	_character = current_scene.get_node("Player")
 	_character.jumped.connect(func() -> void: _jumps += 1)
-
-	await _test_walk_and_sprint()
-	await _test_looking_turns_body_and_tilts_head()
-	await _test_holding_jump_jumps_once()
-	await _test_crouch()
-	await _test_cannot_stand_under_the_beam()
-	await _test_look_direction_is_saveable()
-	await _test_teleport()
-	if _failures == 0:
-		print("test_first_person_movement: OK")
-	quit(1 if _failures > 0 else 0)
-
-
-func _check(condition: bool, message: String) -> void:
-	if not condition:
-		_failures += 1
-		printerr("FAIL: " + message)
-
-
-func _wait(seconds: float) -> void:
-	for i in roundi(seconds * Engine.physics_ticks_per_second):
-		await physics_frame
 
 
 func _reset(at := Vector3(0, 0.1, 0)) -> void:
@@ -76,7 +52,7 @@ func _moves_at(expected: float) -> bool:
 	return absf(_horizontal_speed() - expected) < 0.01
 
 
-func _test_walk_and_sprint() -> void:
+func test_walk_and_sprint() -> void:
 	# Well back from the beam, so there is room to sprint.
 	await _reset(Vector3(0, 0.1, 15))
 	_check(_character.is_on_floor(), "stands on the floor")
@@ -93,7 +69,7 @@ func _test_walk_and_sprint() -> void:
 	_check(_character.is_sprinting(), "and reports sprinting")
 
 
-func _test_looking_turns_body_and_tilts_head() -> void:
+func test_looking_turns_body_and_tilts_head() -> void:
 	await _reset()
 	Input.action_press(&"look_left")
 	while _character.rotation.y < PI / 2.0:
@@ -117,7 +93,7 @@ func _test_looking_turns_body_and_tilts_head() -> void:
 	_check(is_zero_approx(_character.rotation.x), "and never tilts the body")
 
 
-func _test_holding_jump_jumps_once() -> void:
+func test_holding_jump_jumps_once() -> void:
 	await _reset()
 	Input.action_press(&"jump")
 	await _wait(0.2)
@@ -126,7 +102,7 @@ func _test_holding_jump_jumps_once() -> void:
 	_check(_jumps == 1, "holding jump jumps once, got %d" % _jumps)
 
 
-func _test_crouch() -> void:
+func test_crouch() -> void:
 	await _reset()
 	var shape: CapsuleShape3D = _character.get_node("CollisionShape3D").shape
 	var standing_eye := _character.head.position.y
@@ -154,7 +130,7 @@ func _test_crouch() -> void:
 	_check(changes == [true, false], "crouch_changed is emitted each way")
 
 
-func _test_cannot_stand_under_the_beam() -> void:
+func test_cannot_stand_under_the_beam() -> void:
 	# The demo's beam spans z = -5.5 to -8.5 with its underside at 1.2 m.
 	await _reset(Vector3(0, 0.1, -4))
 	Input.action_press(&"move_up")
@@ -177,7 +153,7 @@ func _test_cannot_stand_under_the_beam() -> void:
 	_check(not _character.is_crouching, "and stands up once clear")
 
 
-func _test_look_direction_is_saveable() -> void:
+func test_look_direction_is_saveable() -> void:
 	_check(_character.is_in_group(&"saveable"), "the character joins the saveable group")
 	_character.set_look(1.0, 0.3)
 	# Through JSON as the save_load recipe stores it.
@@ -193,7 +169,7 @@ func _test_look_direction_is_saveable() -> void:
 	_check(is_equal_approx(_character.rotation.y, 1.0), "and the body turns to it")
 
 
-func _test_teleport() -> void:
+func test_teleport() -> void:
 	_character.set_look(0.0, 0.5)
 	_character.velocity = Vector3(5, 3, 5)
 	var spawn := Transform3D(

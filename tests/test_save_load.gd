@@ -1,4 +1,4 @@
-extends SceneTree
+extends "res://tests/support/test_case.gd"
 ## Headless test for recipes/save_load, alone and together with the other
 ## saveable recipes. Run with:
 ##   godot --headless --path . -s tests/test_save_load.gd
@@ -10,29 +10,14 @@ const SLOT := "test_slot"
 ## Away from everything in the fixture, so opening it collects nothing.
 const AWAY := Vector3(-4, 1.1, -12)
 
-var _failures := 0
 
-
-func _initialize() -> void:
+func _before_all() -> void:
 	SaveGame.delete_save(SLOT)
 	await _open(DEMO)
-	await _test_round_trip_in_the_same_scene()
-	await _test_load_changes_to_the_saved_scene()
-	await _test_load_result_outlives_the_scene()
-	await _test_recipes_compose()
-	await _test_older_save_keeps_new_nodes()
-	await _test_engine_types_survive()
-	await _test_missing_and_damaged_saves()
+
+
+func _after_all() -> void:
 	SaveGame.delete_save(SLOT)
-	if _failures == 0:
-		print("test_save_load: OK")
-	quit(1 if _failures > 0 else 0)
-
-
-func _check(condition: bool, message: String) -> void:
-	if not condition:
-		_failures += 1
-		printerr("FAIL: " + message)
 
 
 ## Opens a scene. With [param player_at], its Player is moved there before
@@ -69,11 +54,6 @@ func _load(slot := SLOT) -> Error:
 	return error
 
 
-func _wait(seconds: float) -> void:
-	for i in roundi(seconds * Engine.physics_ticks_per_second):
-		await physics_frame
-
-
 func _player() -> Node3D:
 	return current_scene.get_node("Player")
 
@@ -89,7 +69,7 @@ func _teleport(to: Vector3) -> void:
 	await _wait(0.3)
 
 
-func _test_round_trip_in_the_same_scene() -> void:
+func test_round_trip_in_the_same_scene() -> void:
 	_check(not SaveGame.has_save(SLOT), "no save to begin with")
 	_check(await _load() != OK, "loading an empty slot fails")
 
@@ -111,7 +91,7 @@ func _test_round_trip_in_the_same_scene() -> void:
 	_check(not _pickup(1).is_collected and _pickup(1).visible, "uncollected pickup is restored")
 
 
-func _test_load_changes_to_the_saved_scene() -> void:
+func test_load_changes_to_the_saved_scene() -> void:
 	await _open(OTHER_SCENE)
 	_check(await _load() == OK, "load from another scene succeeds")
 	_check(current_scene.scene_file_path == DEMO, "it switches to the saved scene")
@@ -119,7 +99,7 @@ func _test_load_changes_to_the_saved_scene() -> void:
 	_check(_pickup(0).is_collected, "to every saveable node")
 
 
-func _test_load_result_outlives_the_scene() -> void:
+func test_load_result_outlives_the_scene() -> void:
 	var slots: Array[String] = []
 	var on_loaded := func(slot: String) -> void: slots.append(slot)
 	SaveGame.events.loaded.connect(on_loaded)
@@ -156,7 +136,7 @@ func _world() -> Dictionary:
 	}
 
 
-func _test_recipes_compose() -> void:
+func test_recipes_compose() -> void:
 	await _open(FIXTURE, AWAY)
 	var player: ThirdPersonCharacter = _player()
 	_check(_world()["pickups"] == ["AtStart", "Far"], "the fixture starts with both pickups")
@@ -192,7 +172,7 @@ func _test_recipes_compose() -> void:
 	_check(fresh == saved, "loading from elsewhere gives the same world: %s" % fresh)
 
 
-func _test_older_save_keeps_new_nodes() -> void:
+func test_older_save_keeps_new_nodes() -> void:
 	# The save from the last test has no entry for the collected "Far" pickup.
 	var save: Dictionary = JSON.parse_string(
 		FileAccess.get_file_as_string(SaveGame.get_save_path(SLOT))
@@ -208,7 +188,7 @@ func _test_older_save_keeps_new_nodes() -> void:
 	)
 
 
-func _test_engine_types_survive() -> void:
+func test_engine_types_survive() -> void:
 	await _open(FIXTURE, AWAY)
 	var data := {
 		"position": Vector3(1, 2, 3),
@@ -226,7 +206,7 @@ func _test_engine_types_survive() -> void:
 	_check(typeof(loaded.get("count")) == TYPE_INT, "ints stay ints")
 
 
-func _test_missing_and_damaged_saves() -> void:
+func test_missing_and_damaged_saves() -> void:
 	print("(errors about save files are expected below)")
 	var scene := current_scene
 	var path := SaveGame.get_save_path(SLOT)
