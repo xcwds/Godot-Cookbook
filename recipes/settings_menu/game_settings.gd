@@ -112,7 +112,16 @@ static func get_binding_text(action: StringName) -> String:
 static func event_text(event: InputEvent) -> String:
 	var key := event as InputEventKey
 	if key != null:
-		var code := key.physical_keycode if key.keycode == KEY_NONE else key.keycode
+		var code := key.keycode
+		if code == KEY_NONE:
+			# A physical key is a position on the keyboard, named after the US
+			# layout. Ask what this player's layout has there, so an AZERTY
+			# player reads "Z" for the key that is "W" on a US keyboard.
+			# Platforms that cannot tell (headless, some consoles) report no
+			# layouts and keep the US name.
+			code = key.physical_keycode
+			if DisplayServer.keyboard_get_layout_count() > 0:
+				code = DisplayServer.keyboard_get_keycode_from_physical(code)
 		return OS.get_keycode_string(code)
 	var button := event as InputEventMouseButton
 	if button != null:

@@ -54,6 +54,31 @@ func test_lowering_max_health_clamps_current() -> void:
 	_check(health.current_health == 4.0, "current_health is clamped to a lower max_health")
 
 
+func test_lowering_max_health_to_zero_kills() -> void:
+	var health := _make()
+	var deaths: Array = [0]
+	health.died.connect(func() -> void: deaths[0] += 1)
+	health.max_health = 4.0
+	_check_eq(deaths[0], 0, "lowering max_health above zero does not emit died")
+	health.max_health = 0.0
+	_check(health.is_dead(), "max_health 0 leaves it dead")
+	_check_eq(deaths[0], 1, "and died is emitted")
+	health.max_health = 0.0
+	health.max_health = 5.0
+	_check_eq(deaths[0], 1, "died is not emitted again while dead")
+	_check(health.is_dead(), "raising max_health does not revive")
+
+
+func test_a_scene_with_zero_max_health_does_not_die_on_load() -> void:
+	# The setter runs before _ready() when a scene sets the property.
+	var health := Health.new()
+	var deaths: Array = [0]
+	health.died.connect(func() -> void: deaths[0] += 1)
+	health.max_health = 0.0
+	_spawn(health)
+	_check_eq(deaths[0], 0, "died is not emitted for a node that never had health")
+
+
 func test_bar_follows_health() -> void:
 	var health := _make(100.0)
 	var bar := HealthBar2D.new()

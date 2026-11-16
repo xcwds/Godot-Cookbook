@@ -27,7 +27,7 @@ func _ready() -> void:
 |---|---|
 | Recipes | `orbit_camera` |
 | Input actions | `lock_on`. `look_left` and `look_right` switch targets while locked. |
-| Physics layers | The line-of-sight check looks at layer 1. |
+| Physics layers | The line-of-sight check looks at layer 1 (`line_of_sight_mask`). |
 
 ## Settings
 
@@ -36,7 +36,7 @@ func _ready() -> void:
 | `origin` | `LockOn` | Where the player is. Defaults to the parent. |
 | `orbit_camera` | `LockOn` | The camera to turn. Without it the lock is tracked and signalled only. |
 | `lock_action`, `switch_left_action`, `switch_right_action` | `LockOn` | Input actions. |
-| `max_distance`, `max_angle_degrees`, `requires_line_of_sight` | `LockOn` | Which targets can be picked. |
+| `max_distance`, `max_angle_degrees`, `requires_line_of_sight`, `line_of_sight_mask` | `LockOn` | Which targets can be picked. |
 | `break_distance` | `LockOn` | The lock is dropped beyond this distance. |
 | `camera_turn_speed` | `LockOn` | How quickly the camera turns toward the target. |
 | `target`, `is_locked()`, `toggle()`, `lock(target)`, `unlock()`, `switch_target(direction)`, `find_best_target()` | `LockOn` | State and control from code. |

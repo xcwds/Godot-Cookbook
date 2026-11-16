@@ -130,6 +130,28 @@ func test_dash_goes_where_the_character_faces() -> void:
 	_check(_state() == &"Ground", "dash returns to the ground state")
 
 
+func test_dash_covers_exactly_its_distance() -> void:
+	await _reset(Vector3(0, 1.2, 0), PI / 2.0)
+	var start := _character.position
+	await _tap(&"dash")
+	var ticks := 0
+	while _state() == &"Dash" and ticks < 60:
+		await physics_frame
+		ticks += 1
+	_check(_state() != &"Dash", "the dash ends")
+	# The state after the dash moves on at walking speed in the same tick it
+	# takes over, so allow one step of that.
+	var travelled := start.x - _character.position.x
+	var slack := _character.speed / Engine.physics_ticks_per_second + 0.01
+	_check(
+		(
+			travelled >= _character.dash_distance - 0.01
+			and travelled <= _character.dash_distance + slack
+		),
+		"dash travels dash_distance (%s), got %s" % [_character.dash_distance, travelled]
+	)
+
+
 func test_one_air_dash_per_jump() -> void:
 	await _reset(Vector3(0, 1.2, 0))
 	# A short cooldown, so that only the air-dash rule can block the second dash.

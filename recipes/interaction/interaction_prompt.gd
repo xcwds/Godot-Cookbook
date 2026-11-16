@@ -30,6 +30,13 @@ func _action_hint(action: StringName) -> String:
 	for event in InputMap.action_get_events(action):
 		var key := event as InputEventKey
 		if key != null:
-			var code := key.physical_keycode if key.keycode == KEY_NONE else key.keycode
+			var code := key.keycode
+			if code == KEY_NONE:
+				# A physical key is named after the US layout; show what the
+				# player's own layout has in that position, where the platform
+				# can tell (it reports no layouts otherwise).
+				code = key.physical_keycode
+				if DisplayServer.keyboard_get_layout_count() > 0:
+					code = DisplayServer.keyboard_get_keycode_from_physical(code)
 			return OS.get_keycode_string(code)
 	return action

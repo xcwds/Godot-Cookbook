@@ -20,7 +20,7 @@ A `CharacterBody3D` (`ThirdPersonCharacter`) that walks and runs relative to the
 | Input actions | `move_left`, `move_right`, `move_up`, `move_down`, `jump`, `dash` |
 | Physics layers | The character is on layer 2 and collides with layer 1. |
 
-Bindings in the cookbook project: WASD / left stick to move, Space / A to jump, Shift / left shoulder to dash.
+Bindings in the cookbook project: WASD / left stick to move, Space / A to jump, Q / left shoulder to dash.
 
 ## Settings
 

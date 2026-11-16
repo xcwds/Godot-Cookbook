@@ -7,15 +7,19 @@ extends Node
 signal changed(current: float, maximum: float)
 ## Emitted when damage is applied, with the amount actually lost.
 signal damaged(amount: float)
-## Emitted once when health reaches zero.
+## Emitted once when health reaches zero, through damage or because
+## [member max_health] was lowered to zero.
 signal died
 
 ## Largest value [member current_health] can have. Health starts full.
 @export var max_health := 10.0:
 	set(value):
+		var was_alive := not is_dead()
 		max_health = maxf(value, 0.0)
 		current_health = minf(current_health, max_health)
 		changed.emit(current_health, max_health)
+		if was_alive and is_dead():
+			died.emit()
 ## While true, [method damage] does nothing.
 @export var invulnerable := false
 

@@ -34,6 +34,8 @@ const REPATH_DISTANCE := 0.25
 @export var lose_range := 15.0
 ## Only notice the target when nothing on the world layer is in the way.
 @export var requires_line_of_sight := true
+## Physics layers that block the view of the target.
+@export_flags_3d_physics var line_of_sight_mask := 1
 ## Height of the enemy's eyes above its origin.
 @export var eye_height := 1.5
 ## Seconds without seeing the target before the chase is given up.
@@ -73,7 +75,7 @@ func can_see_target(within: float) -> bool:
 		return true
 	var from := global_position + Vector3.UP * eye_height
 	var to := node.global_position + Vector3.UP * target_height
-	var query := PhysicsRayQueryParameters3D.create(from, to, 1)
+	var query := PhysicsRayQueryParameters3D.create(from, to, line_of_sight_mask)
 	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
 
