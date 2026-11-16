@@ -12,7 +12,9 @@ enum LoopMode {
 	PING_PONG,
 	## Go to the last waypoint, then straight back to the start.
 	LOOP,
-	## Go to the last waypoint and stop.
+	## Go to the last waypoint and stop, with [member active] off. Turning
+	## [member active] back on sends it back the way it came, where it stops
+	## again: a lift or a door worked by a switch.
 	ONCE,
 }
 
@@ -83,8 +85,11 @@ func _arrive() -> void:
 		LoopMode.LOOP:
 			_to = (arrived + 1) % _stops.size()
 		LoopMode.ONCE:
-			if arrived == last:
+			if arrived == (last if _direction == 1 else 0):
+				# Finished. Ready to go back the other way when activated
+				# again, without waiting first.
 				active = false
-			else:
-				_to = arrived + 1
+				_direction = -_direction
+				_wait_left = 0.0
+			_to = arrived + _direction
 	waypoint_reached.emit(arrived)

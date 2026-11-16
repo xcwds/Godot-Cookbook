@@ -3,7 +3,7 @@ extends ThirdPersonCharacterState
 ## input. Gravity is ignored for its duration.
 
 var _direction := Vector3.FORWARD
-var _time_left := 0.0
+var _distance_left := 0.0
 
 
 func _enter(_previous_state: StringName, _data: Dictionary) -> void:
@@ -12,7 +12,7 @@ func _enter(_previous_state: StringName, _data: Dictionary) -> void:
 		_direction = input.normalized()
 	else:
 		_direction = character.get_facing_direction()
-	_time_left = character.dash_distance / character.dash_speed
+	_distance_left = character.dash_distance
 	character.face(_direction)
 	character.begin_dash()
 
@@ -24,8 +24,12 @@ func _exit() -> void:
 
 
 func _physics_update(delta: float) -> void:
-	character.velocity = _direction * character.dash_speed
+	# Counting distance rather than time, and shortening the last step, makes
+	# the dash end exactly at dash_distance. A countdown in seconds drifts by
+	# a whole tick when rounding leaves a sliver of time over.
+	var step := minf(character.dash_speed * delta, _distance_left)
+	character.velocity = _direction * (step / delta)
 	character.move_and_slide()
-	_time_left -= delta
-	if _time_left <= 0.0:
+	_distance_left -= step
+	if _distance_left <= 0.0001:
 		transition_to(GROUND if character.is_on_floor() else AIR)

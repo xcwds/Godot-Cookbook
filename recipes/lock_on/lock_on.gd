@@ -26,8 +26,11 @@ signal unlocked
 @export var max_distance := 20.0
 ## Targets further than this from the centre of the view are ignored.
 @export_range(1.0, 180.0) var max_angle_degrees := 60.0
-## Only lock onto targets with nothing on the world layer in the way.
+## Only lock onto targets with nothing on [member line_of_sight_mask] in the
+## way.
 @export var requires_line_of_sight := true
+## Physics layers that block the view of a target.
+@export_flags_3d_physics var line_of_sight_mask := 1
 
 @export_group("While Locked")
 ## The lock is dropped when the target gets further away than this.
@@ -112,6 +115,11 @@ func unlock() -> void:
 func switch_target(direction: int) -> void:
 	if not is_locked():
 		return
+	# The target can be freed between two _process() calls, and a freed target
+	# cannot be passed to the typed helpers.
+	if not is_instance_valid(target):
+		unlock()
+		return
 	var current := _screen_angle(target)
 	var best: LockOnTarget = null
 	var best_gap := INF
@@ -179,5 +187,7 @@ func _has_line_of_sight(candidate: LockOnTarget) -> bool:
 	if not requires_line_of_sight:
 		return true
 	var from := _camera().global_position
-	var query := PhysicsRayQueryParameters3D.create(from, candidate.global_position, 1)
+	var query := PhysicsRayQueryParameters3D.create(
+		from, candidate.global_position, line_of_sight_mask
+	)
 	return origin.get_world_3d().direct_space_state.intersect_ray(query).is_empty()

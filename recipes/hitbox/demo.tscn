@@ -118,7 +118,7 @@ unique_name_in_owner = true
 offset_left = 32.0
 offset_top = 32.0
 text = "The red strip hurts while you stand on it.
-Dash (Shift / left shoulder) through a grey dummy to hurt it."
+Dash (Q / left shoulder) through a grey dummy to hurt it."
 
 [node name="PauseMenu" parent="." instance=ExtResource("pause_menu")]
 

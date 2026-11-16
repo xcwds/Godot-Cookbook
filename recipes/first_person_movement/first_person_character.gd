@@ -67,11 +67,11 @@ var _height := 0.0
 var _coyote_left := 0.0
 var _jump_buffer_left := 0.0
 var _was_on_floor := true
+var _capsule: CapsuleShape3D
 
 @onready var head: Node3D = $Head
 @onready var camera: Camera3D = $Head/Camera
 @onready var _collision: CollisionShape3D = $CollisionShape3D
-@onready var _capsule: CapsuleShape3D
 
 
 func _ready() -> void:

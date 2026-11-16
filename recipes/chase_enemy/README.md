@@ -18,7 +18,7 @@ To make it do something when it arrives, connect `reached_target`. To hurt on co
 |---|---|
 | Recipes | `state_machine` |
 | Level | A `NavigationRegion3D` with a baked navigation mesh. |
-| Physics layers | The enemy is on layer 5 and collides with layer 1. Its line-of-sight check looks at layer 1. |
+| Physics layers | The enemy is on layer 5 and collides with layer 1. Its line-of-sight check looks at layer 1 (`line_of_sight_mask`). |
 
 ## Settings
 
@@ -28,7 +28,7 @@ To make it do something when it arrives, connect `reached_target`. To hurt on co
 | `target_height` | Height above the target's origin that the enemy looks at. |
 | `speed`, `turn_speed`, `stop_distance` | Movement. |
 | `detection_range`, `lose_range` | Distances at which the target is noticed and given up. |
-| `requires_line_of_sight`, `eye_height`, `lose_sight_time` | Seeing. A target out of sight for `lose_sight_time` seconds is given up. |
+| `requires_line_of_sight`, `line_of_sight_mask`, `eye_height`, `lose_sight_time` | Seeing. A target out of sight for `lose_sight_time` seconds is given up. |
 | `home` | Where it returns to. Set to its starting position on ready. |
 | `target_spotted`, `target_lost`, `reached_target` | Signals. |
 

@@ -98,6 +98,22 @@ func test_switching_targets() -> void:
 	_lock_on.camera_turn_speed = 10.0
 
 
+func test_switching_from_a_freed_target_drops_the_lock() -> void:
+	await _reset()
+	var doomed := _make_target(Vector3(0, 1, -10))
+	_make_target(Vector3(5, 1, -10))
+	_lock_on.lock(doomed)
+	var unlocks: Array = [0]
+	var count := func() -> void: unlocks[0] += 1
+	_lock_on.unlocked.connect(count)
+	# Freed and switched in the same frame, before _process() can notice.
+	doomed.free()
+	_lock_on.switch_target(1)
+	_check(not _lock_on.is_locked(), "switching with a freed target drops the lock")
+	_check_eq(unlocks[0], 1, "and unlocked is emitted once")
+	_lock_on.unlocked.disconnect(count)
+
+
 func test_lock_is_dropped() -> void:
 	await _reset()
 	var target := _make_target(Vector3(0, 1, -8))

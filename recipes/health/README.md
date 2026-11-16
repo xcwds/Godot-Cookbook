@@ -34,7 +34,7 @@ None. See `recipe.cfg`.
 | `is_dead()` | True at zero health. |
 | `changed(current, maximum)` | Signal: either value changed. |
 | `damaged(amount)` | Signal: damage was applied. |
-| `died` | Signal: health reached zero. Emitted once. |
+| `died` | Signal: health reached zero, by damage or by lowering `max_health` to zero. Emitted once. |
 
 ## Where to take it next
 

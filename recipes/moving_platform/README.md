@@ -31,9 +31,9 @@ func _on_switch_used(_actor: Node) -> void:
 | `waypoints` | Stops, as offsets from the starting position. The start is stop 0. |
 | `speed` | Metres per second, averaged over each leg. |
 | `wait_time` | Seconds to wait at each stop. |
-| `loop_mode` | `PING_PONG` goes back the way it came, `LOOP` returns straight to the start, `ONCE` stops at the last waypoint. |
+| `loop_mode` | `PING_PONG` goes back the way it came, `LOOP` returns straight to the start, `ONCE` stops at the last waypoint; activated again, it goes back to the start and stops there. |
 | `ease_in_out` | Speed up and slow down at each end. |
-| `active` | Whether it is moving. `ONCE` turns this off when it finishes. |
+| `active` | Whether it is moving. `ONCE` turns this off when it finishes, and turning it back on starts the return trip. |
 | `waypoint_reached(index)` | Signal on arrival at a stop. |
 | `get_target_index()` | The stop it is heading for or resting at. |
 

@@ -54,6 +54,21 @@ func test_loop_and_once() -> void:
 	_check(once.position.is_equal_approx(Vector3(2, 5, 2)), "once stops at the last waypoint")
 	_check(not once.active, "and switches itself off")
 
+	# Activated again, it returns the way it came and stops at the start.
+	var once_stops: Array = []
+	once.waypoint_reached.connect(func(index: int) -> void: once_stops.append(index))
+	once.active = true
+	await _wait(0.1)
+	_check(once.active and once_stops.is_empty(), "activating again starts it moving")
+	_check(once.position.z < 2.0, "back toward the previous waypoint: %s" % once.position)
+	await _wait(2.6)
+	_check_eq(once_stops, [1, 0], "it visits the waypoints in reverse")
+	_check(once.position.is_equal_approx(Vector3(0, 5, 0)), "and stops at the start")
+	_check(not once.active, "switched off again")
+	once.active = true
+	await _wait(2.6)
+	_check(once.position.is_equal_approx(Vector3(2, 5, 2)), "a third run goes out again")
+
 
 func test_inactive_platform_stays_put() -> void:
 	var platform := _make(Vector3(0, 0, 0), [Vector3(4, 0, 0)])
