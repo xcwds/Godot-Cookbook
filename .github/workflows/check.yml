@@ -19,18 +19,20 @@ jobs:
     # A full run takes about 3 minutes; each Godot run is also limited by
     # GODOT_TIMEOUT in tools/check.sh.
     timeout-minutes: 20
-    env:
-      GODOT_INSTALL_DIR: ${{ github.workspace }}/../godot
     steps:
       - uses: actions/checkout@v4
 
+      # actions/cache refuses paths containing "..", so the binary lives in
+      # the runner's temp folder, outside the checkout.
       - name: Cache Godot
         uses: actions/cache@v4
         with:
-          path: ${{ env.GODOT_INSTALL_DIR }}
+          path: ${{ runner.temp }}/godot
           key: godot-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.godot-version') }}
 
       - name: Install Godot (version from .godot-version, checksum-verified)
+        env:
+          GODOT_INSTALL_DIR: ${{ runner.temp }}/godot
         run: sudo --preserve-env=GODOT_INSTALL_DIR tools/install_godot.sh
 
       - name: Install gdtoolkit (version from .gdtoolkit-version)
