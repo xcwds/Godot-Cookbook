@@ -26,7 +26,7 @@ Starter recipes for 3D game development in Godot 4. Each recipe is a small folde
 | [chase_enemy](recipes/chase_enemy/) | Enemy that chases a target along the navigation mesh. |
 | [health](recipes/health/) | Hit points as a node, with damage, heal and signals. |
 | [hitbox](recipes/hitbox/) | Areas that deal damage and areas that take it. |
-| [projectile](recipes/projectile/) | Projectiles, a launcher and a reusable object pool. |
+| [projectile](recipes/projectile/) | Projectiles that cannot tunnel through walls, and a launcher. |
 
 ### World
 
@@ -50,6 +50,7 @@ Starter recipes for 3D game development in Godot 4. Each recipe is a small folde
 | Recipe | What it is |
 |---|---|
 | [meter](recipes/meter/) | A number between zero and a maximum, with add, spend, drain and signals. |
+| [object_pool](recipes/object_pool/) | Reuse instances of a scene instead of creating and freeing them. |
 | [save_load](recipes/save_load/) | Save the current scene's state to a file and restore it. |
 | [scene_transition](recipes/scene_transition/) | Fade between scenes with background loading and a progress bar. |
 | [state_machine](recipes/state_machine/) | Node-based finite state machine. |

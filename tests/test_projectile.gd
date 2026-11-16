@@ -33,33 +33,6 @@ func _make_wall(z: float, thickness := 0.5) -> StaticBody3D:
 	return wall
 
 
-func test_pool_reuses_instances() -> void:
-	var pool := _make_pool(2)
-	_check(pool.get_total_count() == 2 and pool.get_active_count() == 0, "pool is filled up front")
-	var first := pool.acquire()
-	_check(first.visible and first.process_mode == Node.PROCESS_MODE_INHERIT, "acquired is active")
-	_check(pool.get_active_count() == 1, "and counted as active")
-	pool.release(first)
-	pool.release(first)
-	_check(pool.get_active_count() == 0, "release puts it back, once")
-	_check(
-		not first.visible and first.process_mode == Node.PROCESS_MODE_DISABLED, "and disables it"
-	)
-	_check(pool.acquire() == first, "the same instance is handed out again")
-
-	pool.acquire()
-	var third := pool.acquire()
-	_check(third != null and pool.get_total_count() == 3, "the pool grows when it runs out")
-	ObjectPool.release_or_free(third)
-	_check(pool.get_active_count() == 2, "release_or_free returns a pooled node to its pool")
-
-
-func test_pool_that_cannot_grow() -> void:
-	var pool := _make_pool(1, false)
-	_check(pool.acquire() != null, "hands out what it has")
-	_check(pool.acquire() == null, "then returns null when it cannot grow")
-
-
 func test_projectile_flies_and_times_out() -> void:
 	var pool := _make_pool(1)
 	var projectile: Projectile = pool.acquire()
