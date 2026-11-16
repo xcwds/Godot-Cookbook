@@ -52,7 +52,7 @@ The input action names are constants at the top of `third_person_character.gd`.
 
 - Velocity changes instantly. Add acceleration and friction in `steer()` for weightier movement.
 - No variable jump height: releasing jump early does not cut the jump short.
-- No slopes handling beyond what `CharacterBody3D` does, no stairs, no moving platforms.
+- No slopes handling beyond what `CharacterBody3D` does, and no stairs. Moving platforms need no code here: the character rides the ones from the `moving_platform` recipe.
 - The Kenney bundle has only idle, walk, run and jump clips: sideways and backwards movement while strafing slides, there is no landing animation, and wall sliding uses the jump pose.
 - Wall sliding works on any wall. Restrict it with a physics layer or a group check in `can_wall_slide()`.
 - The dash has no animation, effect or invulnerability; connect to `dashed`.
