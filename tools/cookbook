@@ -4,18 +4,26 @@
     tools/cookbook list
     tools/cookbook info third_person_movement
     tools/cookbook add third_person_movement --to ~/games/my_game
+    tools/cookbook status --to ~/games/my_game
 
 `add` copies the recipe and the recipes it depends on, adds the input
 actions and physics layer names they need to the target's project.godot
 (without changing ones that exist), and prints what is left to do by hand.
+It stops if the project already has a script with the same `class_name` as
+one in the recipes. Each copied folder gets a `.cookbook` file recording the
+cookbook commit it came from; `status` reads those and says which copies are
+behind the cookbook or have been edited.
 
 Needs only Python 3. Run it from a clone of the cookbook.
 """
 
 import argparse
+import datetime
+import hashlib
 import json
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -24,6 +32,11 @@ RECIPES_DIR = ROOT / "recipes"
 DEFAULT_DEST = "addons/cookbook"
 # Text files in which res://recipes/ paths are rewritten to the new location.
 TEXT_SUFFIXES = {".tscn", ".tres", ".gd", ".gdshader", ".cfg", ".import", ".md"}
+# Written into each copied recipe folder. Godot ignores files that start with a dot.
+STAMP_NAME = ".cookbook"
+# Files Godot writes or rewrites by itself, which are not a user's edits.
+GENERATED_SUFFIXES = {".import", ".uid"}
+CLASS_NAME = re.compile(r"^class_name\s+(\w+)", flags=re.M)
 
 
 class CookbookError(Exception):
@@ -116,6 +129,114 @@ def recipe_files(name):
     )
 
 
+def class_names(path):
+    """The global class a script registers, as a list (empty if none)."""
+    try:
+        return CLASS_NAME.findall(read_text(path))
+    except (OSError, UnicodeDecodeError):
+        return []
+
+
+def recipe_classes(name):
+    """Maps each global class name a recipe defines to its file in the recipe."""
+    classes = {}
+    for relative in recipe_files(name):
+        if relative.suffix == ".gd":
+            for class_name in class_names(RECIPES_DIR / name / relative):
+                classes[class_name] = relative
+    return classes
+
+
+# --- provenance ---------------------------------------------------------------
+
+
+def file_hash(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def source_hash(name):
+    """One hash over the files `add` would copy for a recipe, as they are now."""
+    digest = hashlib.sha256()
+    for relative in recipe_files(name):
+        digest.update(relative.as_posix().encode() + b"\0")
+        digest.update((RECIPES_DIR / name / relative).read_bytes() + b"\0")
+    return digest.hexdigest()
+
+
+def cookbook_commit(name):
+    """The cookbook's commit, "-modified" if the recipe has uncommitted changes."""
+
+    def git(*arguments):
+        result = subprocess.run(
+            ["git", "-C", str(ROOT), *arguments], capture_output=True, text=True, check=False
+        )
+        return result.stdout.strip() if result.returncode == 0 else None
+
+    try:
+        top = git("rev-parse", "--show-toplevel")
+        if top is None or Path(top).resolve() != ROOT:
+            return "unknown"
+        commit = git("rev-parse", "HEAD")
+        if commit is None:
+            return "unknown"
+        if git("status", "--porcelain", "--", f"recipes/{name}"):
+            commit += "-modified"
+        return commit
+    except OSError:  # git is not installed
+        return "unknown"
+
+
+def copied_files(folder):
+    """Maps each file in a copied recipe folder to its hash, without the stamp."""
+    return {
+        path.relative_to(folder).as_posix(): file_hash(path)
+        for path in sorted(folder.rglob("*"))
+        if path.is_file() and path.name != STAMP_NAME
+    }
+
+
+def write_stamp(name, folder):
+    stamp = {
+        "recipe": name,
+        "commit": cookbook_commit(name),
+        "date": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d"),
+        "source": source_hash(name),
+        "files": copied_files(folder),
+    }
+    write_text(folder / STAMP_NAME, json.dumps(stamp, indent=1) + "\n")
+
+
+def read_stamp(folder):
+    """The stamp of a copied recipe, or None if it has none that can be read."""
+    try:
+        stamp = json.loads(read_text(folder / STAMP_NAME))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(stamp, dict) or not isinstance(stamp.get("files"), dict):
+        return None
+    return stamp
+
+
+def local_edits(folder, stamp):
+    """What differs between a copied recipe and its stamp, as "word file" lines.
+
+    Files that Godot generates or rewrites (.import, .uid) do not count.
+    """
+    now = copied_files(folder)
+    edits = []
+    for relative, recorded in stamp["files"].items():
+        if Path(relative).suffix == ".import":
+            continue
+        if relative not in now:
+            edits.append(f"deleted  {relative}")
+        elif now[relative] != recorded:
+            edits.append(f"changed  {relative}")
+    for relative in now:
+        if relative not in stamp["files"] and Path(relative).suffix not in GENERATED_SUFFIXES:
+            edits.append(f"added    {relative}")
+    return edits
+
+
 # --- project.godot -----------------------------------------------------------
 
 
@@ -203,6 +324,7 @@ def command_info(args):
     settings = recommended_settings(everything)
     setting_text = ", ".join(f"{key}={format_setting(value)}" for key, value in settings.items())
     print(f"  Recommended:     {setting_text or 'no project settings'}")
+    print(f"  Class names:     {', '.join(sorted(recipe_classes(args.recipe))) or 'none'}")
     print(f"  Files:           {len(recipe_files(args.recipe))}, see recipes/{args.recipe}/")
     print(f"  Read more:       recipes/{args.recipe}/README.md")
 
@@ -255,12 +377,35 @@ def command_add(args):
     project_text = to_lf(original_text)
     say = print if not args.dry_run else lambda text: print("(dry run) " + text)
 
-    # 1. Copy the recipes.
+    # 1. Copy the recipes. Everything that could stop the copy is checked
+    # first, so a refusal leaves the project as it was.
+    to_copy = [n for n in names if args.force or not (target / dest / n).exists()]
+    clashes = class_clashes(to_copy, target, dest)
+    if clashes and not args.force:
+        raise CookbookError(
+            "the project already defines class names these recipes use:\n"
+            + "\n".join(f"  {clash}" for clash in clashes)
+            + "\nGodot allows one script per class_name. Rename yours, or pass --force to "
+            "copy anyway and sort it out in the editor."
+        )
+    for name in to_copy:
+        recipe_dest = target / dest / name
+        stamp = read_stamp(recipe_dest) if recipe_dest.is_dir() else None
+        edits = local_edits(recipe_dest, stamp) if stamp else []
+        if edits and not args.discard_edits:
+            raise CookbookError(
+                f"{dest}/{name} has been edited since it was copied:\n"
+                + "\n".join(f"  {edit}" for edit in edits)
+                + "\n--force would delete these edits. Add --discard-edits to replace it anyway."
+            )
+
     for name in names:
         recipe_dest = target / dest / name
-        if recipe_dest.exists() and not args.force:
+        if name not in to_copy:
             say(f"skip   {dest}/{name} (already there; --force to overwrite)")
             continue
+        if recipe_dest.exists():
+            say(f"delete {dest}/{name} ({len(copied_files(recipe_dest))} files, to replace it)")
         say(f"copy   {name} -> {dest}/{name}")
         if args.dry_run:
             continue
@@ -268,6 +413,7 @@ def command_add(args):
             shutil.rmtree(recipe_dest)
         for relative in recipe_files(name):
             copy_file(RECIPES_DIR / name / relative, recipe_dest / relative, dest)
+        write_stamp(name, recipe_dest)
 
     # 2. Input actions and layer names the recipes need.
     actions, layers = requirements(names)
@@ -317,6 +463,8 @@ def command_add(args):
                 "(Project Settings, with Advanced Settings on). It is not changed for you; "
                 "the recipe READMEs say what it is for."
             )
+    for clash in clashes:
+        notes.append(f"Class name clash, copied because of --force: {clash}")
     missing = [a for a in actions if a not in target_inputs and a not in available]
     if missing:
         notes.append("Define these input actions yourself: " + ", ".join(missing))
@@ -326,6 +474,78 @@ def command_add(args):
     print("\nNext:")
     for note in notes:
         print(f"  - {note}")
+
+
+def class_clashes(names, target, dest):
+    """Describes each global class the recipes define that the project has too.
+
+    The folders the recipes are copied into are not searched: what is there is
+    skipped or replaced.
+    """
+    wanted = {}
+    for name in names:
+        for class_name, relative in recipe_classes(name).items():
+            wanted[class_name] = f"recipes/{name}/{relative.as_posix()}"
+    if not wanted:
+        return []
+    replaced = [target / dest / name for name in names]
+    clashes = []
+    for path in sorted(target.rglob("*.gd")):
+        if ".godot" in path.relative_to(target).parts:
+            continue
+        if any(folder in path.parents for folder in replaced):
+            continue
+        for class_name in class_names(path):
+            if class_name in wanted:
+                clashes.append(
+                    f"{class_name}: {path.relative_to(target).as_posix()} in the project, "
+                    f"{wanted[class_name]} in the cookbook"
+                )
+    return clashes
+
+
+def command_status(args):
+    target = Path(args.to).expanduser().resolve()
+    if not (target / "project.godot").is_file():
+        raise CookbookError(f"{target} is not a Godot project (no project.godot)")
+    stamps = sorted(
+        path
+        for path in target.rglob(STAMP_NAME)
+        if path.is_file() and ".godot" not in path.relative_to(target).parts
+    )
+    if not stamps:
+        print("No recipes copied by tools/cookbook were found in this project.")
+        print("(Copies made before it recorded where they came from are not listed.)")
+        return
+    available = recipe_names()
+    for stamp_path in stamps:
+        folder = stamp_path.parent
+        where = folder.relative_to(target).as_posix()
+        stamp = read_stamp(folder)
+        if stamp is None:
+            print(f"{where}: its {STAMP_NAME} file cannot be read")
+            continue
+        name = str(stamp.get("recipe", folder.name))
+        commit, _, modified = str(stamp.get("commit", "unknown")).partition("-")
+        if commit != "unknown":
+            commit = commit[:10] + (" with uncommitted changes" if modified else "")
+        print(
+            f"{where}: {name}, copied {stamp.get('date', 'at an unknown date')} "
+            f"from cookbook commit {commit}"
+        )
+        if name not in available:
+            print("  the cookbook no longer has this recipe")
+        elif stamp.get("source") != source_hash(name):
+            print("  behind: the cookbook's version has changed since")
+        else:
+            print("  same as the cookbook's version")
+        edits = local_edits(folder, stamp)
+        if edits:
+            print("  edited here:")
+            for edit in edits:
+                print(f"    {edit}")
+        else:
+            print("  not edited here")
 
 
 def copy_file(source, destination, dest):
@@ -361,9 +581,22 @@ def main():
         default=DEFAULT_DEST,
         help=f"folder inside the project to copy into (default: {DEFAULT_DEST})",
     )
-    add.add_argument("--force", action="store_true", help="overwrite recipes already copied")
+    add.add_argument(
+        "--force",
+        action="store_true",
+        help="replace recipes already copied, and copy despite class name clashes",
+    )
+    add.add_argument(
+        "--discard-edits",
+        action="store_true",
+        help="with --force, replace a copy even if it was edited after it was copied",
+    )
     add.add_argument("--dry-run", action="store_true", help="show what would happen")
     add.set_defaults(run=command_add)
+
+    status = commands.add_parser("status", help="list the recipes copied into a project")
+    status.add_argument("--to", required=True, metavar="PROJECT", help="folder with project.godot")
+    status.set_defaults(run=command_status)
 
     args = parser.parse_args()
     try:
