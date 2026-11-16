@@ -14,6 +14,7 @@ permissions:
 jobs:
   latest-stable:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -36,7 +37,7 @@ jobs:
 
       - name: Install gdtoolkit
         if: steps.versions.outputs.latest != steps.versions.outputs.pinned
-        run: pipx install "gdtoolkit==4.*"
+        run: pipx install "gdtoolkit==$(tr -d '[:space:]' < .gdtoolkit-version)"
 
       - name: Run checks against latest
         id: check
