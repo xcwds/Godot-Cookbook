@@ -16,6 +16,7 @@ Starter recipes for 3D game development in Godot 4. Each recipe is a small folde
 | Recipe | What it is |
 |---|---|
 | [aim_camera](recipes/aim_camera/) | Over-the-shoulder camera that takes over while aiming. |
+| [camera_shot](recipes/camera_shot/) | Scripted camera shots that blend from the gameplay camera and back. |
 | [free_camera](recipes/free_camera/) | Detached flying camera for a photo mode or for debugging. |
 | [lock_on](recipes/lock_on/) | Lock the camera onto a target and switch between targets. |
 | [orbit_camera](recipes/orbit_camera/) | Third-person camera that follows, orbits, zooms and avoids walls. |

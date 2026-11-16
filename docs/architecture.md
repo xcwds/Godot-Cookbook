@@ -18,7 +18,7 @@ flowchart LR
     projectile --> object_pool
 ```
 
-The other recipes depend on nothing: `first_person_movement`, `free_camera`, `moving_platform`, `checkpoint`, `interaction`, `inventory`, `pause_menu`, `settings_menu`, `save_load` and `scene_transition`.
+The other recipes depend on nothing: `first_person_movement`, `camera_shot`, `free_camera`, `moving_platform`, `checkpoint`, `interaction`, `inventory`, `pause_menu`, `settings_menu`, `save_load` and `scene_transition`.
 
 Everything else recipes do for each other goes through the conventions below, which are looked up by name at run time. A recipe that offers one works without the recipe that uses it, and the other way round.
 
@@ -77,6 +77,7 @@ Every demo shows one recipe, and several borrow others to do it. They are the pl
 | `lock_on` | Third-person character and orbit camera, with lock-on on top. |
 | `aim_camera` | Orbit camera and aim camera on a simple walker from `shared/`. |
 | `moving_platform` | Third-person character and orbit camera, riding platforms. |
+| `camera_shot` | Third-person character and orbit camera. The demo stops both on `input_locked` and restarts them on `input_unlocked`. |
 | `free_camera` | Third-person character, orbit camera and pause menu. The demo hands the controls to the free camera in spectator mode and back afterwards. |
 
 Most of these also add the pause menu.
