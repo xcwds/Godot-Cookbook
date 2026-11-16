@@ -1,38 +1,15 @@
-extends SceneTree
+extends "res://tests/support/test_case.gd"
 ## Headless test for recipes/projectile. Run with:
 ##   godot --headless --path . -s tests/test_projectile.gd
 
 const PROJECTILE := preload("res://recipes/projectile/projectile.tscn")
 
-var _failures := 0
 
-
-func _initialize() -> void:
+func _before_all() -> void:
 	# Launchers put their pool beside the current scene, so there must be one.
 	var scene := Node3D.new()
 	root.add_child(scene)
 	current_scene = scene
-	await process_frame
-	_test_pool_reuses_instances()
-	_test_pool_that_cannot_grow()
-	await _test_projectile_flies_and_times_out()
-	await _test_projectile_stops_at_a_wall()
-	await _test_fast_projectile_does_not_tunnel()
-	await _test_launcher()
-	if _failures == 0:
-		print("test_projectile: OK")
-	quit(1 if _failures > 0 else 0)
-
-
-func _check(condition: bool, message: String) -> void:
-	if not condition:
-		_failures += 1
-		printerr("FAIL: " + message)
-
-
-func _wait(seconds: float) -> void:
-	for i in roundi(seconds * Engine.physics_ticks_per_second):
-		await physics_frame
 
 
 func _make_pool(size: int, can_grow := true) -> ObjectPool:
@@ -56,7 +33,7 @@ func _make_wall(z: float, thickness := 0.5) -> StaticBody3D:
 	return wall
 
 
-func _test_pool_reuses_instances() -> void:
+func test_pool_reuses_instances() -> void:
 	var pool := _make_pool(2)
 	_check(pool.get_total_count() == 2 and pool.get_active_count() == 0, "pool is filled up front")
 	var first := pool.acquire()
@@ -75,17 +52,15 @@ func _test_pool_reuses_instances() -> void:
 	_check(third != null and pool.get_total_count() == 3, "the pool grows when it runs out")
 	ObjectPool.release_or_free(third)
 	_check(pool.get_active_count() == 2, "release_or_free returns a pooled node to its pool")
-	pool.free()
 
 
-func _test_pool_that_cannot_grow() -> void:
+func test_pool_that_cannot_grow() -> void:
 	var pool := _make_pool(1, false)
 	_check(pool.acquire() != null, "hands out what it has")
 	_check(pool.acquire() == null, "then returns null when it cannot grow")
-	pool.free()
 
 
-func _test_projectile_flies_and_times_out() -> void:
+func test_projectile_flies_and_times_out() -> void:
 	var pool := _make_pool(1)
 	var projectile: Projectile = pool.acquire()
 	projectile.speed = 10.0
@@ -104,10 +79,9 @@ func _test_projectile_flies_and_times_out() -> void:
 	await _wait(0.4)
 	_check(pool.get_active_count() == 0, "returns to the pool when its lifetime ends")
 	_check(events == ["launched", "despawned"], "signals: %s" % [events])
-	pool.free()
 
 
-func _test_projectile_stops_at_a_wall() -> void:
+func test_projectile_stops_at_a_wall() -> void:
 	var pool := _make_pool(1)
 	var wall := _make_wall(-5.0)
 	await _wait(0.1)
@@ -119,11 +93,9 @@ func _test_projectile_stops_at_a_wall() -> void:
 	_check(hits.size() == 1 and hits[0]["collider"] == wall, "hit is emitted with the collider")
 	_check(is_equal_approx(hits[0]["position"].z, -4.75), "at the wall's surface")
 	_check(pool.get_active_count() == 0, "and it returns to the pool")
-	wall.free()
-	pool.free()
 
 
-func _test_fast_projectile_does_not_tunnel() -> void:
+func test_fast_projectile_does_not_tunnel() -> void:
 	var pool := _make_pool(1)
 	var wall := _make_wall(-5.0, 0.05)
 	await _wait(0.1)
@@ -135,11 +107,9 @@ func _test_fast_projectile_does_not_tunnel() -> void:
 	projectile.launch(Transform3D(Basis.IDENTITY, Vector3.ZERO))
 	await _wait(0.2)
 	_check(hits[0] == 1, "a very fast projectile still hits a thin wall")
-	wall.free()
-	pool.free()
 
 
-func _test_launcher() -> void:
+func test_launcher() -> void:
 	var launcher := ProjectileLauncher.new()
 	launcher.projectile_scene = PROJECTILE
 	launcher.fire_rate = 10.0

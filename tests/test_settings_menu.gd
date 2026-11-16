@@ -1,34 +1,19 @@
-extends SceneTree
+extends "res://tests/support/test_case.gd"
 ## Headless test for recipes/settings_menu. Run with:
 ##   godot --headless --path . -s tests/test_settings_menu.gd
 
 const MENU := preload("res://recipes/settings_menu/settings_menu.tscn")
 const TEST_PATH := "user://test_settings.cfg"
 
-var _failures := 0
 
-
-func _initialize() -> void:
-	await process_frame
+func _before_all() -> void:
 	GameSettings.settings_path = TEST_PATH
 	DirAccess.remove_absolute(TEST_PATH)
-	_test_volume_is_applied_and_saved()
-	_test_video_settings_are_saved()
-	_test_rebinding()
-	_test_settings_survive_a_restart()
-	_test_reset_bindings()
-	await _test_menu()
+
+
+func _after_all() -> void:
 	GameSettings.unload()
 	DirAccess.remove_absolute(TEST_PATH)
-	if _failures == 0:
-		print("test_settings_menu: OK")
-	quit(1 if _failures > 0 else 0)
-
-
-func _check(condition: bool, message: String) -> void:
-	if not condition:
-		_failures += 1
-		printerr("FAIL: " + message)
 
 
 func _key(code: Key) -> InputEventKey:
@@ -45,7 +30,7 @@ func _has_joypad_binding(action: StringName) -> bool:
 	)
 
 
-func _test_volume_is_applied_and_saved() -> void:
+func test_volume_is_applied_and_saved() -> void:
 	var sfx := AudioServer.get_bus_index(&"SFX")
 	_check(sfx >= 0, "the project has an SFX bus")
 	GameSettings.set_bus_volume(&"SFX", 0.5)
@@ -59,7 +44,7 @@ func _test_volume_is_applied_and_saved() -> void:
 	_check(FileAccess.file_exists(TEST_PATH), "changes are saved straight away")
 
 
-func _test_video_settings_are_saved() -> void:
+func test_video_settings_are_saved() -> void:
 	_check(not GameSettings.is_fullscreen() and GameSettings.is_vsync(), "video defaults")
 	GameSettings.set_fullscreen(true)
 	GameSettings.set_vsync(false)
@@ -67,7 +52,7 @@ func _test_video_settings_are_saved() -> void:
 	GameSettings.set_fullscreen(false)
 
 
-func _test_rebinding() -> void:
+func test_rebinding() -> void:
 	_check(
 		GameSettings.get_binding_text(&"move_up") == "W", "default binding is read from the project"
 	)
@@ -85,7 +70,7 @@ func _test_rebinding() -> void:
 	_check(GameSettings.get_binding_text(&"dash") == "Mouse 3", "mouse buttons can be bound")
 
 
-func _test_settings_survive_a_restart() -> void:
+func test_settings_survive_a_restart() -> void:
 	# Forget everything, as if the game had been closed.
 	GameSettings.unload()
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index(&"SFX"), 0.0)
@@ -98,7 +83,7 @@ func _test_settings_survive_a_restart() -> void:
 	_check(GameSettings.get_binding_text(&"dash") == "Mouse 3", "mouse bindings are restored")
 
 
-func _test_reset_bindings() -> void:
+func test_reset_bindings() -> void:
 	GameSettings.reset_bindings()
 	_check(GameSettings.get_binding_text(&"move_up") == "W", "reset restores the project bindings")
 	_check(_has_joypad_binding(&"move_up"), "including gamepad ones")
@@ -108,9 +93,9 @@ func _test_reset_bindings() -> void:
 	_check(is_equal_approx(GameSettings.get_bus_volume(&"SFX"), 0.25), "other settings are kept")
 
 
-func _test_menu() -> void:
+func test_menu() -> void:
 	var menu: SettingsMenu = MENU.instantiate()
-	root.add_child(menu)
+	_spawn(menu)
 	var sliders := menu.get_node("%AudioList").get_children()
 	_check(sliders.size() == AudioServer.bus_count, "one slider per audio bus")
 	var sfx_slider: HSlider = menu.get_node("%AudioList").find_child("SFX", true, false)
@@ -147,4 +132,3 @@ func _test_menu() -> void:
 	menu.closed.connect(func() -> void: closed[0] = true)
 	menu.get_node("%Back").pressed.emit()
 	_check(closed[0], "Back emits closed")
-	menu.free()

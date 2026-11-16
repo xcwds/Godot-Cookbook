@@ -1,8 +1,6 @@
-extends SceneTree
+extends "res://tests/support/test_case.gd"
 ## Headless test for recipes/state_machine. Run with:
 ##   godot --headless --path . -s tests/test_state_machine.gd
-
-var _failures := 0
 
 
 class Recorder:
@@ -28,31 +26,6 @@ class Recorder:
 			on_physics.call()
 
 
-func _initialize() -> void:
-	# Nodes only become ready once the tree is running.
-	await process_frame
-	_test_starts_in_first_child_or_initial_state()
-	_test_transition_runs_exit_then_enter_and_waits_a_tick()
-	_test_hand_off_runs_new_state_in_same_tick()
-	_test_hand_off_loop_is_capped()
-	_test_unknown_state_is_ignored()
-	_test_only_the_current_state_can_transition()
-	_test_outside_code_can_transition_and_restart()
-	_test_transition_from_enter_is_queued()
-	_test_transition_from_exit_is_refused()
-	_test_transition_from_a_listener_is_queued()
-	_test_enter_loop_is_capped()
-	if _failures == 0:
-		print("test_state_machine: OK")
-	quit(1 if _failures > 0 else 0)
-
-
-func _check(condition: bool, message: String) -> void:
-	if not condition:
-		_failures += 1
-		printerr("FAIL: " + message)
-
-
 func _make(names: Array, initial := "") -> StateMachine:
 	var machine := StateMachine.new()
 	for state_name: String in names:
@@ -61,21 +34,19 @@ func _make(names: Array, initial := "") -> StateMachine:
 		machine.add_child(state)
 	if initial != "":
 		machine.initial_state = machine.get_node(initial)
-	root.add_child(machine)
+	_spawn(machine)
 	return machine
 
 
-func _test_starts_in_first_child_or_initial_state() -> void:
+func test_starts_in_first_child_or_initial_state() -> void:
 	var first := _make(["A", "B"])
 	_check(first.state.name == &"A", "starts in first child")
 	_check(first.state.log == [["enter", &"", {}]], "initial state is entered once")
 	var chosen := _make(["A", "B"], "B")
 	_check(chosen.state.name == &"B", "starts in initial_state")
-	first.free()
-	chosen.free()
 
 
-func _test_transition_runs_exit_then_enter_and_waits_a_tick() -> void:
+func test_transition_runs_exit_then_enter_and_waits_a_tick() -> void:
 	var machine := _make(["A", "B"])
 	var a: Recorder = machine.get_node("A")
 	var b: Recorder = machine.get_node("B")
@@ -91,20 +62,18 @@ func _test_transition_runs_exit_then_enter_and_waits_a_tick() -> void:
 	_check(changes == [[&"A", &"B"]], "state_changed is emitted")
 	machine._physics_process(0.1)
 	_check(b.log.back() == ["physics"], "new state updates on the next tick")
-	machine.free()
 
 
-func _test_hand_off_runs_new_state_in_same_tick() -> void:
+func test_hand_off_runs_new_state_in_same_tick() -> void:
 	var machine := _make(["A", "B"])
 	var a: Recorder = machine.get_node("A")
 	var b: Recorder = machine.get_node("B")
 	a.on_physics = func() -> void: a.hand_off_to(&"B")
 	machine._physics_process(0.1)
 	_check(b.log == [["enter", &"A", {}], ["physics"]], "hand-off updates new state in same tick")
-	machine.free()
 
 
-func _test_hand_off_loop_is_capped() -> void:
+func test_hand_off_loop_is_capped() -> void:
 	var machine := _make(["A", "B"])
 	var a: Recorder = machine.get_node("A")
 	var b: Recorder = machine.get_node("B")
@@ -114,20 +83,18 @@ func _test_hand_off_loop_is_capped() -> void:
 	machine._physics_process(0.1)
 	var updates := a.log.count(["physics"]) + b.log.count(["physics"])
 	_check(updates == StateMachine.MAX_HAND_OFFS_PER_TICK, "hand-off loop stops at the cap")
-	machine.free()
 
 
-func _test_unknown_state_is_ignored() -> void:
+func test_unknown_state_is_ignored() -> void:
 	var machine := _make(["A"])
 	var a: Recorder = machine.get_node("A")
 	a.on_physics = func() -> void: a.transition_to(&"Missing")
 	print("(an error about a missing state is expected below)")
 	machine._physics_process(0.1)
 	_check(machine.state == a, "unknown target keeps the current state")
-	machine.free()
 
 
-func _test_only_the_current_state_can_transition() -> void:
+func test_only_the_current_state_can_transition() -> void:
 	var machine := _make(["A", "B", "C"])
 	var a: Recorder = machine.get_node("A")
 	var b: Recorder = machine.get_node("B")
@@ -137,10 +104,9 @@ func _test_only_the_current_state_can_transition() -> void:
 	a.transition_to(&"C")
 	_check(machine.state == b, "a state that is not current cannot trigger a transition")
 	_check(b.log.back() != ["exit"], "and the current state is not exited")
-	machine.free()
 
 
-func _test_outside_code_can_transition_and_restart() -> void:
+func test_outside_code_can_transition_and_restart() -> void:
 	var machine := _make(["A", "B"], "B")
 	var a: Recorder = machine.get_node("A")
 	var b: Recorder = machine.get_node("B")
@@ -167,7 +133,6 @@ func _test_outside_code_can_transition_and_restart() -> void:
 	print("(an error about state 'Nope' is expected below)")
 	machine.transition_to(&"Nope")
 	_check(machine.state == b, "an unknown state from outside changes nothing")
-	machine.free()
 
 
 func _record_changes(machine: StateMachine) -> Array:
@@ -178,7 +143,7 @@ func _record_changes(machine: StateMachine) -> Array:
 	return changes
 
 
-func _test_transition_from_enter_is_queued() -> void:
+func test_transition_from_enter_is_queued() -> void:
 	var machine := _make(["A", "B", "C"])
 	var b: Recorder = machine.get_node("B")
 	var c: Recorder = machine.get_node("C")
@@ -188,10 +153,9 @@ func _test_transition_from_enter_is_queued() -> void:
 	_check(changes == [[&"A", &"B"], [&"B", &"C"]], "A -> B then B -> C, got %s" % [changes])
 	_check(machine.state == c, "ends in the state _enter() asked for")
 	_check(b.log == [["enter", &"A", {}], ["exit"]], "B is entered fully before it is left")
-	machine.free()
 
 
-func _test_transition_from_exit_is_refused() -> void:
+func test_transition_from_exit_is_refused() -> void:
 	var machine := _make(["A", "B", "C"], "C")
 	var c: Recorder = machine.get_node("C")
 	var changes := _record_changes(machine)
@@ -204,10 +168,9 @@ func _test_transition_from_exit_is_refused() -> void:
 		"ends in the requested state, not the one _exit() asked for"
 	)
 	_check(changes == [[&"C", &"B"]], "one transition is reported, got %s" % [changes])
-	machine.free()
 
 
-func _test_transition_from_a_listener_is_queued() -> void:
+func test_transition_from_a_listener_is_queued() -> void:
 	var machine := _make(["A", "B", "C"])
 	var seen: Array = []
 	machine.state_changed.connect(
@@ -223,10 +186,9 @@ func _test_transition_from_a_listener_is_queued() -> void:
 		seen == [[&"A", &"B"], [&"B", &"C"]],
 		"later listeners still see A -> B first, got %s" % [seen]
 	)
-	machine.free()
 
 
-func _test_enter_loop_is_capped() -> void:
+func test_enter_loop_is_capped() -> void:
 	var machine := _make(["A", "B"])
 	var a: Recorder = machine.get_node("A")
 	var b: Recorder = machine.get_node("B")
@@ -238,4 +200,3 @@ func _test_enter_loop_is_capped() -> void:
 	_check(
 		enters <= StateMachine.MAX_HAND_OFFS_PER_TICK + 1, "a loop of _enter() transitions stops"
 	)
-	machine.free()
