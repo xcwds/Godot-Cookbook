@@ -5,7 +5,7 @@ A recipe is a folder under `recipes/` that someone can copy into their own proje
 ## Rules
 
 1. **Copyable on its own.** A recipe depends only on Godot and on other recipes named in its `recipe.cfg`. Only `demo.tscn` and files named `demo*` may use anything from `shared/`, or from recipes that are not in `depends`.
-2. **Relocatable.** `tools/cookbook add` copies a recipe to another path and rewrites `res://recipes/` in scenes and import files. Scripts should not build `res://recipes/...` paths at runtime, and the `.uid` and `.import` files stay next to their sources.
+2. **Relocatable.** `tools/cookbook add` copies a recipe to another path and rewrites `res://recipes/` in scenes and import files. Scripts must not contain `res://recipes/` paths: find a file that belongs to the recipe relative to the script, as `SceneTransition.get_scene_path()` does with `resource_path.get_base_dir()`. `tools/check.sh repo` fails for a recipe script (other than `demo*`) with such a path. The `.uid` and `.import` files stay next to their sources.
 3. **Exports and signals over paths.** Configuration is exported properties; communication with other recipes is signals or exported node references, not `$Hard/Coded/Paths` into another recipe.
 4. **A `demo.tscn`** that runs by itself and shows the recipe working. The recipe browser lists every recipe that has one.
 5. **A `recipe.cfg`** manifest (see below).

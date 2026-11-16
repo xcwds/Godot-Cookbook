@@ -13,7 +13,8 @@ signal finished
 ## Emitted if the scene could not be loaded. The old scene stays.
 signal failed
 
-const SCENE_PATH := "res://recipes/scene_transition/scene_transition.tscn"
+## The transition scene, next to this script wherever the recipe was copied.
+const SCENE_FILE := "scene_transition.tscn"
 const NODE_NAME := "SceneTransition"
 
 ## Seconds for each fade.
@@ -36,11 +37,18 @@ static func change_scene(
 	var running := tree.root.get_node_or_null(NODE_NAME) as SceneTransition
 	if running != null:
 		return running
-	var transition: SceneTransition = load(SCENE_PATH).instantiate()
+	var transition: SceneTransition = load(get_scene_path()).instantiate()
 	transition.name = NODE_NAME
 	tree.root.add_child(transition)
 	transition._run(path, minimum_load_time)
 	return transition
+
+
+## Where [constant SCENE_FILE] is: in the folder of this script, so the recipe
+## keeps working when its folder is moved or copied by hand.
+static func get_scene_path() -> String:
+	var script: Script = SceneTransition
+	return script.resource_path.get_base_dir().path_join(SCENE_FILE)
 
 
 func _ready() -> void:
@@ -63,10 +71,14 @@ func _run(path: String, minimum_load_time: float) -> void:
 
 	var tree := get_tree()
 	tree.paused = false
-	tree.change_scene_to_packed(packed)
-	# The new scene is added at the end of the frame; let it get ready.
-	await tree.process_frame
-	await tree.process_frame
+	if tree.change_scene_to_packed(packed) != OK:
+		push_error("SceneTransition: could not open '%s'." % path)
+		await _fade(0.0)
+		failed.emit()
+		queue_free()
+		return
+	# Emitted once the new scene is the current one and is ready.
+	await tree.scene_changed
 
 	_progress.hide()
 	await _fade(0.0)
