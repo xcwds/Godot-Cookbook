@@ -20,51 +20,66 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # "Newer" is decided by tools/newer_stable.sh, which compares version
+      # numbers. A patch release of an older branch is published later than the
+      # pin but is not an upgrade, so releases/latest cannot be used here.
       - name: Compare pinned and latest versions
         id: versions
         run: |
           pinned="$(tr -d '[:space:]' < .godot-version)"
-          latest="$(gh api repos/godotengine/godot/releases/latest --jq .tag_name)"
+          newer="$(gh api repos/godotengine/godot/releases --paginate \
+            --jq '.[] | select((.prerelease or .draft) | not) | .tag_name' |
+            tools/newer_stable.sh "$pinned")"
           echo "pinned=$pinned" >> "$GITHUB_OUTPUT"
-          echo "latest=$latest" >> "$GITHUB_OUTPUT"
-          echo "Pinned: $pinned, latest stable: $latest"
+          echo "newer=$newer" >> "$GITHUB_OUTPUT"
+          echo "Pinned: $pinned, newer stable: ${newer:-none}"
+
+      # An issue for this version, open or closed, means it has been reported.
+      # A closed one was declined or done, so it is not opened again.
+      - name: Look for an existing issue
+        id: existing
+        if: steps.versions.outputs.newer != ''
+        env:
+          TITLE: Upgrade to Godot ${{ steps.versions.outputs.newer }}
+        run: |
+          titles="$(gh issue list --state all --limit 100 --search "in:title \"$TITLE\"" --json title --jq '.[].title')"
+          if grep -Fxq -- "$TITLE" <<<"$titles"; then
+            echo "An issue titled \"$TITLE\" already exists."
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Install latest Godot
-        if: steps.versions.outputs.latest != steps.versions.outputs.pinned
+        if: steps.existing.outputs.found == 'false'
         env:
-          LATEST: ${{ steps.versions.outputs.latest }}
+          LATEST: ${{ steps.versions.outputs.newer }}
         run: sudo GODOT_VERSION="$LATEST" tools/install_godot.sh
 
       - name: Install gdtoolkit
-        if: steps.versions.outputs.latest != steps.versions.outputs.pinned
+        if: steps.existing.outputs.found == 'false'
         run: pipx install "gdtoolkit==$(tr -d '[:space:]' < .gdtoolkit-version)"
 
       - name: Run checks against latest
         id: check
-        if: steps.versions.outputs.latest != steps.versions.outputs.pinned
+        if: steps.existing.outputs.found == 'false'
         continue-on-error: true
         run: tools/check.sh
 
       - name: Open an issue
-        if: steps.versions.outputs.latest != steps.versions.outputs.pinned
+        if: steps.existing.outputs.found == 'false'
         env:
           PINNED: ${{ steps.versions.outputs.pinned }}
-          LATEST: ${{ steps.versions.outputs.latest }}
+          LATEST: ${{ steps.versions.outputs.newer }}
           OUTCOME: ${{ steps.check.outcome }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          title="Upgrade to Godot $LATEST"
-          existing="$(gh issue list --state open --search "in:title \"$title\"" --json number --jq length)"
-          if [ "$existing" -gt 0 ]; then
-            echo "An issue for $LATEST is already open."
-            exit 0
-          fi
           if [ "$OUTCOME" = "success" ]; then
             result="The checks pass on $LATEST without changes."
           else
             result="The checks fail on $LATEST; see the run for details."
           fi
-          gh issue create --title "$title" --body "Godot $LATEST is the latest stable release; the cookbook is pinned to $PINNED.
+          gh issue create --title "Upgrade to Godot $LATEST" --body "Godot $LATEST is the newest stable release; the cookbook is pinned to $PINNED.
 
           $result
 

@@ -2,7 +2,8 @@
 # Checks the cookbook project.
 #
 #   tools/check.sh            repo + lint + import + smoke + test + cli (the default)
-#   tools/check.sh repo       Godot version is consistent, every asset is in CREDITS.md
+#   tools/check.sh repo       Godot version is consistent, every asset is in CREDITS.md,
+#                             tools/newer_stable.sh compares versions correctly
 #   tools/check.sh import     import assets and parse all scripts
 #   tools/check.sh smoke      run the main scene and every recipes/*/demo.tscn headless for a few frames
 #   tools/check.sh test       run tests/test_*.gd headless
@@ -88,6 +89,23 @@ do_repo() {
 		echo "$script contains a res://recipes/ path; resolve it relative to the script" >&2
 		failed=1
 	done < <(git ls-files 'recipes/*.gd' | grep -v '/demo[^/]*$' | xargs grep -l 'res://recipes/' || true)
+
+	# tools/newer_stable.sh decides whether the weekly workflow proposes an upgrade.
+	local pin tags want got
+	while IFS='|' read -r pin tags want; do
+		got="$(tr ' ' '\n' <<<"$tags" | tools/newer_stable.sh "$pin")"
+		if [ "$got" != "$want" ]; then
+			echo "newer_stable.sh $pin with [$tags] printed '$got', expected '$want'" >&2
+			failed=1
+		fi
+	done <<'CASES'
+4.7.2-stable|4.6.9-stable 4.7.2-stable 4.7-stable|
+4.7.2-stable|4.6.9-stable 4.7.3-stable 4.7.2-stable|4.7.3-stable
+4.7.2-stable|4.7.10-stable 4.7.9-stable|4.7.10-stable
+4.7.2-stable|4.8-stable 4.7.10-stable 4.8.1-rc1 5.0-beta1|4.8-stable
+4.7-stable|4.7.1-stable 4.7-stable|4.7.1-stable
+4.7.2-stable|latest nightly|
+CASES
 	return "$failed"
 }
 
@@ -262,6 +280,6 @@ case "${1:-default}" in
 	test) do_test ;;
 	# The checks that need no Godot run first, so they fail fast.
 	default) do_repo; do_lint; do_import; do_smoke; do_test; do_cli ;;
-	*) sed -n '2,12p' "$0" >&2; exit 2 ;;
+	*) sed -n '2,13p' "$0" >&2; exit 2 ;;
 esac
 echo "OK"
