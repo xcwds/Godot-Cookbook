@@ -12,7 +12,7 @@ Thank you for helping. The cookbook is a set of small recipes that people copy i
 
 You need the Godot version in `.godot-version`, Python 3, and `gdlint` / `gdformat` from the gdtoolkit version in `.gdtoolkit-version`.
 
-- **Dev container (any OS).** Open the repository in the dev container (`.devcontainer/`). It has all of the above. It is headless: use it to import, lint and test, and open the project in the Godot editor on your own machine to play the demos.
+- **Dev container (any OS).** Open the repository in the dev container (`.devcontainer/`). It has all of the above. It is headless: use it to import, lint and test, and open the project in the Godot editor on your own machine to play the demos. It also has [Claude Code](https://docs.claude.com/en/docs/claude-code/overview): run `claude` in its terminal (or use the Claude Code extension in VS Code) and sign in once. The sign-in is kept in a Docker volume, so it survives rebuilding the container.
 - **Linux.** `tools/install_godot.sh` installs the pinned Godot binary, and `pip install "gdtoolkit==$(cat .gdtoolkit-version)"` the linter.
 - **Windows and macOS without the container.** The editor and `tools/cookbook` work (on Windows run it as `python tools\cookbook ...`). `tools/check.sh` and `tools/install_godot.sh` are Bash scripts for Linux: run them in the dev container or in WSL.
 

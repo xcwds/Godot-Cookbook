@@ -5,13 +5,23 @@
 		// The repository root, so the image can read .godot-version.
 		"context": ".."
 	},
+	"remoteUser": "vscode",
+	"containerEnv": {
+		// All of Claude Code's state (sign-in, settings, history) in one folder,
+		// which the volume below keeps across rebuilds.
+		"CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+	},
+	"mounts": [
+		"source=godot-cookbook-claude-config-${devcontainerId},target=/home/vscode/.claude,type=volume"
+	],
 	// Imports every project once so the language server and smoke runs work straight away.
 	"postCreateCommand": "tools/check.sh import",
 	"customizations": {
 		"vscode": {
 			"extensions": [
 				"geequlim.godot-tools",
-				"EditorConfig.EditorConfig"
+				"EditorConfig.EditorConfig",
+				"anthropic.claude-code"
 			],
 			"settings": {
 				"godotTools.editorPath.godot4": "/usr/local/bin/godot",
