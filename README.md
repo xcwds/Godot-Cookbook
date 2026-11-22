@@ -106,7 +106,7 @@ Copying a recipe folder by hand works too: take the recipes it depends on, skip 
 
 [CONTRIBUTING.md](CONTRIBUTING.md) says how to set up, what to check and what a pull request needs.
 
-Open the repository in the dev container (`.devcontainer/`) to get the pinned Godot version (headless), `gdlint` and `gdformat`. Outside a container, `tools/install_godot.sh` installs the same Godot binary on Linux. `tools/check.sh` and `tools/install_godot.sh` are Bash scripts for Linux; on Windows or macOS use the dev container (or WSL) for them.
+Open the repository in the dev container (`.devcontainer/`) to get the pinned Godot version (headless), `gdlint`, `gdformat` and Claude Code. Outside a container, `tools/install_godot.sh` installs the same Godot binary on Linux. `tools/check.sh` and `tools/install_godot.sh` are Bash scripts for Linux; on Windows or macOS use the dev container (or WSL) for them.
 
 ```bash
 tools/check.sh        # repo checks, tool tests, lint, import, demos, tests, recipes in an empty project
