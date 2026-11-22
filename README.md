@@ -89,6 +89,8 @@ The recipes register global classes with short names such as `State`, `Health` a
 
 Each copied folder gets a `.cookbook` file that records the cookbook commit and date it came from. `status` lists the copies in a project and says which are behind the cookbook and which you have edited. To update a copy, run `add` again with `--force`; it replaces the folder, and refuses if you have edited the copy unless you add `--discard-edits`.
 
+To make your game inside a dev container, keep it in its own repository next to the cookbook; [docs/game_devcontainer.md](docs/game_devcontainer.md) has a container setup for that.
+
 Copying a recipe folder by hand works too: take the recipes it depends on, skip the `demo*` files, and replace `res://recipes/` in the copied scenes, resources and import files (`.tscn`, `.tres`, `.import`) with the new location. Scripts contain no such paths, so they need no change, and a recipe folder can be moved later. You then add the input actions and physics layer names from the recipe's `recipe.cfg` yourself.
 
 ## Layout
@@ -98,7 +100,7 @@ Copying a recipe folder by hand works too: take the recipes it depends on, skip 
 | `recipes/` | One folder per recipe. |
 | `shared/` | Demo-only scenes and assets. Recipes do not depend on it. |
 | `browser/` | The recipe browser shown when the project runs. |
-| `docs/` | [How the recipes fit together](docs/architecture.md), [recipe contract](docs/recipe_contract.md), [README template](docs/recipe_template.md), [style guide](docs/style_guide.md), [upgrading Godot](docs/upgrading.md). |
+| `docs/` | [How the recipes fit together](docs/architecture.md), [recipe contract](docs/recipe_contract.md), [README template](docs/recipe_template.md), [style guide](docs/style_guide.md), [upgrading Godot](docs/upgrading.md), [making a game in a dev container](docs/game_devcontainer.md). |
 | `tests/` | Headless test scripts (`tests/test_*.gd`) and the tests of the Python tools (`tests/test_*.py`). |
 | `tools/` | `cookbook` (add recipes to a project), `check.sh`, `check_recipes.py`, `install_godot.sh`. |
 
